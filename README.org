@@ -1,0 +1,6 @@
+Max margin interval trees
+
+** 16 March 2017
+
+[[file:figure-penaltyLearning.R]] visualizes cost as a function of feature
+value.
