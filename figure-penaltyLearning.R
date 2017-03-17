@@ -10,8 +10,8 @@ margin <- 0.1
 min.diff.feature <- 1e-10
 log.n <- neuroblastomaProcessed$feature.mat[, "log.mad"]
 i.vec <- which(-2.515 < log.n & log.n < -2.5096)
-n.row <- 2000
 n.row <- nrow(neuroblastomaProcessed$feature.mat)
+n.row <- 1000
 i.vec <- as.integer(seq(1, nrow(neuroblastomaProcessed$feature.mat), l=n.row))
 target.dt.list <- list()
 thresh.dt.list <- list()
@@ -98,16 +98,17 @@ for(feature.name in feature.name.vec){
   thresh[order(slack.diff),]
   plot(slack.diff ~ threshold, thresh)
   stopifnot(thresh[, all.equal(slack, total.cost)])
-  is.positive <- 0 < slack.mat
-  if(any(is.positive)){
+  is.saved <- 0 < slack.mat
+  is.saved <- TRUE # for smooth transitions.
+  if(any(is.saved)){
     slack.dt.list[[feature.name]] <- data.table(
       feature.name,
-      threshold=thresh.mat[is.positive],
-      sign=sign.mat[is.positive],
-      slack=slack.mat[is.positive],
-      pred=pred.mat[is.positive],
-      feature=feature.mat[is.positive],
-      limit=limit.mat[is.positive])
+      threshold=thresh.mat[is.saved],
+      sign=sign.mat[is.saved],
+      slack=slack.mat[is.saved],
+      pred=pred.mat[is.saved],
+      feature=feature.mat[is.saved],
+      limit=limit.mat[is.saved])
   }
   thresh.dt.list[[feature.name]] <- data.table(feature.name, thresh)
 }
@@ -188,7 +189,7 @@ ggplot()+
   ylab("")+
   geom_segment(aes(
     feature, limit,
-    xend=feature, yend=pred+sign*margin),
+    xend=feature, yend=limit+sign*slack),
     data=data.table(best.slack, y="log(penalty)"),
     color="red")+
   geom_segment(aes(
@@ -227,7 +228,7 @@ gg <- ggplot()+
   ylab("")+
   geom_segment(aes(
     feature, limit,
-    xend=feature, yend=pred+sign*margin),
+    xend=feature, yend=limit+sign*slack),
     data=data.table(best.slack, y="log(penalty)"),
     color="red")+
   geom_segment(aes(
@@ -243,7 +244,7 @@ gg <- ggplot()+
     linetype="dotted",
     color="violet")+
   scale_linetype_manual(values=c(prediction="solid", margin="dotted"))
-png("figure-penaltyLearning.png")
+png("figure-penaltyLearning.png", 6, 6, units="in", res=100)
 print(gg)
 dev.off()
 
