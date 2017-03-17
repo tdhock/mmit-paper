@@ -6,12 +6,12 @@ data(neuroblastomaProcessed, package="penaltyLearning")
 ## margin=0 or 1.
 
 feature.name.vec <- c("log.mad", "log.n")
-margin <- 1
+margin <- 0.1
+min.diff.feature <- 1e-10
 log.n <- neuroblastomaProcessed$feature.mat[, "log.mad"]
 i.vec <- which(-2.515 < log.n & log.n < -2.5096)
+n.row <- 2000
 n.row <- nrow(neuroblastomaProcessed$feature.mat)
-n.row <- 1000
-## TODO investigate increasing n.row to 2000
 i.vec <- as.integer(seq(1, nrow(neuroblastomaProcessed$feature.mat), l=n.row))
 target.dt.list <- list()
 thresh.dt.list <- list()
@@ -47,8 +47,11 @@ for(feature.name in feature.name.vec){
     result.fwd[1:(nrow(result.fwd)-1), ],
     rev=result.rev[(nrow(result.rev)-1):1, ])
   both[, total.cost := cost + rev.cost]
-  thresh <- both[diff.feature != 0 & is.finite(rev.pred) & is.finite(pred),]
-  thresh[, threshold := feature + diff.feature/2]
+  both[, threshold := feature + diff.feature/2]
+  thresh <- both[{
+    min.diff.feature < diff.feature & #do not consider very close thresholds.
+      is.finite(rev.pred) & is.finite(pred) #do not consider inf predictions.
+   },]
   plot(total.cost ~ feature, both)
   abline(v=thresh[which.min(total.cost), threshold], col="red")
   finite.limits <- data.table(
@@ -130,12 +133,14 @@ show.thresh <- best.thresh
 ## Make a matrix margin or pred -1 0 1 on rows, left or right on
 ## columns.
 sign.mat <- matrix(c(1, 0, -1), 3, 2, byrow=FALSE)
+feature.range <- range(
+  neuroblastomaProcessed$feature.mat[, show.thresh$feature.name])
 model.dt <- data.table(
   show.thresh,
   feature.min=as.numeric(matrix(
-    c(-Inf, show.thresh$pred.thresh), 3, 2, byrow=TRUE)),
+    c(feature.range[1], show.thresh$pred.thresh), 3, 2, byrow=TRUE)),
   feature.max=as.numeric(matrix(
-    c(show.thresh$pred.thresh, Inf), 3, 2, byrow=TRUE)),
+    c(show.thresh$pred.thresh, feature.range[2]), 3, 2, byrow=TRUE)),
   log.penalty=as.numeric(
     show.thresh[, matrix(c(pred, rev.pred), 3, 2, byrow=TRUE)]+
     margin*sign.mat),
@@ -200,7 +205,7 @@ ggplot()+
     color="violet")+
   scale_linetype_manual(values=c(prediction="solid", margin="dotted"))
 
-ggplot()+
+gg <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(y ~ feature.name, scales="free")+
@@ -238,4 +243,11 @@ ggplot()+
     linetype="dotted",
     color="violet")+
   scale_linetype_manual(values=c(prediction="solid", margin="dotted"))
+png("figure-penaltyLearning.png")
+print(gg)
+dev.off()
 
+## TODO: viz all thresholds for a given margin parameter.
+
+## TODO: hold out half data, compute test error for different margin
+## parameters.
