@@ -2,6 +2,11 @@ source("packages.R")
 
 data(neuroblastomaProcessed, package="penaltyLearning")
 
+with(neuroblastomaProcessed, {
+  fwrite(data.table(feature.mat), "neuroblastomaProcessed_features.csv")
+  fwrite(data.table(target.mat), "neuroblastomaProcessed_targets.csv")
+})
+
 ## To see selecting one variable or another, try n.row=50 with
 ## margin=0 or 1.
 
