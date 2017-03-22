@@ -10,13 +10,13 @@ with(neuroblastomaProcessed, {
 ## To see selecting one variable or another, try n.row=50 with
 ## margin=0 or 1.
 
-feature.name.vec <- c("log.mad", "log.n")
-margin <- 0.1
+feature.name.vec <- c("log.mad", "log.n", "log.bases.per.probe", "log.rss.1")
+margin <- 0.5
 min.diff.feature <- 1e-10
 log.n <- neuroblastomaProcessed$feature.mat[, "log.mad"]
 i.vec <- which(-2.515 < log.n & log.n < -2.5096)
 n.row <- nrow(neuroblastomaProcessed$feature.mat)
-n.row <- 1000
+n.row <- 100
 i.vec <- as.integer(seq(1, nrow(neuroblastomaProcessed$feature.mat), l=n.row))
 target.dt.list <- list()
 thresh.dt.list <- list()
@@ -46,6 +46,9 @@ for(feature.name in feature.name.vec){
   target.rev.mat <- target.ord.mat[nrow(target.ord.mat):1, ]
   stopifnot(identical(rownames(target.ord.mat), rev(rownames(target.rev.mat))))
   result.rev <- compute_optimal_costs(target.rev.mat, margin)
+  print(rbind(
+    fwd=result.fwd[n.row,],
+    rev=result.rev[n.row,]))
   both <- data.table(
     feature=feature.ord.vec[-length(feature.ord.vec)],
     diff.feature=diff(feature.ord.vec),
@@ -113,7 +116,8 @@ for(feature.name in feature.name.vec){
       slack=slack.mat[is.saved],
       pred=pred.mat[is.saved],
       feature=feature.mat[is.saved],
-      limit=limit.mat[is.saved])
+      limit=limit.mat[is.saved],
+      row.i=row(limit.mat)[is.saved])
   }
   thresh.dt.list[[feature.name]] <- data.table(feature.name, thresh)
 }
@@ -134,13 +138,13 @@ max.feature <- min.thresh[.N, feature+diff.feature]
 mid.feature <- (min.feature + max.feature)/2
 best.thresh <- min.thresh[1,]
 best.thresh[, pred.thresh := mid.feature]
-show.thresh <- thresh.dt[feature.name=="log.n",][.N,]
 show.thresh <- best.thresh
 ## Make a matrix margin or pred -1 0 1 on rows, left or right on
 ## columns.
 sign.mat <- matrix(c(1, 0, -1), 3, 2, byrow=FALSE)
-feature.range <- range(
-  neuroblastomaProcessed$feature.mat[, show.thresh$feature.name])
+feature.range.mat <- apply(
+  neuroblastomaProcessed$feature.mat, 2, range)
+feature.range <- feature.range.mat[, show.thresh$feature.name]
 model.dt <- data.table(
   show.thresh,
   feature.min=as.numeric(matrix(
@@ -151,6 +155,25 @@ model.dt <- data.table(
     show.thresh[, matrix(c(pred, rev.pred), 3, 2, byrow=TRUE)]+
     margin*sign.mat),
   line=ifelse(as.numeric(sign.mat)==0, "prediction", "margin"))
+
+## The matrices below have 6 columns: left lower margin, right lower
+## margin, left pred, right pred, left upper margin, right upper
+## margin.
+all.pred.mat <- thresh.dt[, matrix(rep(c(pred, rev.pred), 3), .N, 6)]
+all.margin.mat <- matrix(
+  margin*rep(c(-1, 0, 1), each=2), nrow(thresh.dt), 6, byrow=TRUE)
+all.model.dt <- data.table(
+  thresh.dt,
+  feature.min=thresh.dt[, as.numeric(matrix(
+    rep(c(feature.range.mat[1, feature.name], threshold), 3),
+    .N, 6))],
+  feature.max=thresh.dt[, as.numeric(matrix(
+    rep(c(threshold, feature.range.mat[2, feature.name]), 3),
+    .N, 6))],
+  line.side=rep(c("left", "right"), each=nrow(thresh.dt)),
+  line.sign=as.numeric(sign(all.margin.mat)),
+  line=ifelse(as.numeric(all.margin.mat)==0, "prediction", "margin"),
+  log.penalty=as.numeric(all.pred.mat+all.margin.mat))
     
 best.slack <- slack.dt[show.thresh, on=.(feature.name, threshold), nomatch=0L]
 ggplot()+
@@ -211,49 +234,120 @@ ggplot()+
     color="violet")+
   scale_linetype_manual(values=c(prediction="solid", margin="dotted"))
 
+ggplot()+
+  geom_step(aes(
+    feature, total.cost,
+    group=feature.name),
+    data=data.table(thresh.dt, y="total.cost"),
+    size=2)
+
+viz <- list(
+  features=ggplot()+
+    theme_bw()+
+    theme(panel.margin=grid::unit(0, "lines"))+
+    theme_animint(width=1000)+
+    facet_grid(y ~ feature.name, scales="free")+
+    geom_step(aes(
+      feature, total.cost),
+      data=data.table(thresh.dt, y="total.cost"),
+      size=2)+
+    geom_tallrect(aes(
+      xmin=feature, xmax=feature+diff.feature,
+      clickSelects.variable=paste0(feature.name, ".thresh"),
+      clickSelects.value=threshold),
+      data=data.table(thresh.dt, y="total.cost"),
+      alpha=0.2,
+      size=2)+
+    geom_point(aes(
+      threshold, total.cost,
+      key=feature.name,
+      showSelected.variable=paste0(feature.name, ".thresh"),
+      showSelected.value=threshold),
+      data=data.table(thresh.dt, y="total.cost"),
+      fill=NA,
+      color="violet")+
+    geom_vline(aes(
+      xintercept=threshold,
+      key=feature.name,
+      showSelected.variable=paste0(feature.name, ".thresh"),
+      showSelected.value=threshold),
+      data=thresh.dt,
+      linetype="dotted",
+      color="violet")+
+    scale_fill_manual(values=c(min="blue", max="white"))+
+    ylab("")+
+    geom_segment(aes(
+      feature, limit,
+      showSelected.variable=paste0(feature.name, ".thresh"),
+      showSelected.value=threshold,
+      key=paste(feature.name, row.i),
+      xend=feature, yend=limit+sign*slack),
+      data=data.table(slack.dt, y="log(penalty)"),
+      color="red")+
+    geom_segment(aes(
+      feature.min, log.penalty,
+      linetype=line,
+      showSelected.variable=paste0(feature.name, ".thresh"),
+      showSelected.value=threshold,
+      key=paste(feature.name, line.side, line.sign),
+      xend=feature.max, yend=log.penalty),
+      data=data.table(all.model.dt, y="log(penalty)"),
+      size=1,
+      color="red")+
+    scale_linetype_manual(values=c(prediction="solid", margin="dotted"))+
+    geom_point(aes(
+      feature, limit,
+      key=pid.chr,
+      fill=type),
+      data=data.table(target.dt, y="log(penalty)")),
+  duration=list(),
+  first=list())
+viz$duration[paste0(unique(thresh.dt$feature.name), ".thresh")] <- 2000
+best.each <- thresh.dt[, .SD[which.min(total.cost),], by=feature.name]
+viz$first[paste0(best.each$feature.name, ".thresh")] <- best.each$threshold
+animint2dir(viz, "figure-penaltyLearning")
+
 gg <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(y ~ feature.name, scales="free")+
-  geom_segment(aes(
-    feature, total.cost,
-    xend=feature+diff.feature, yend=total.cost),
-    data=data.table(thresh.dt, y="total.cost"),
-    size=2)+
-  geom_point(aes(
-    pred.thresh, total.cost),
-    data=data.table(show.thresh, y="total.cost"),
-    shape=1,
-    color="violet")+
-  geom_point(aes(
-    feature, limit, fill=type),
-    shape=21,
-    data=data.table(target.dt, y="log(penalty)"))+
-  scale_fill_manual(values=c(min="blue", max="white"))+
-  ylab("")+
-  geom_segment(aes(
-    feature, limit,
-    xend=feature, yend=limit+sign*slack),
-    data=data.table(best.slack, y="log(penalty)"),
-    color="red")+
-  geom_segment(aes(
-    feature.min, log.penalty,
-    linetype=line,
-    xend=feature.max, yend=log.penalty),
-    data=data.table(model.dt, y="log(penalty)"),
-    size=1,
-    color="red")+
-  geom_vline(aes(
-    xintercept=pred.thresh),
-    data=show.thresh,
-    linetype="dotted",
-    color="violet")+
+    geom_segment(aes(
+      feature, total.cost,
+      xend=feature+diff.feature, yend=total.cost),
+      data=data.table(thresh.dt, y="total.cost"),
+      size=2)+
+    geom_point(aes(
+      pred.thresh, total.cost),
+      data=data.table(show.thresh, y="total.cost"),
+      shape=1,
+      color="violet")+
+    geom_point(aes(
+      feature, limit, fill=type),
+      shape=21,
+      data=data.table(target.dt, y="log(penalty)"))+
+    scale_fill_manual(values=c(min="blue", max="white"))+
+    ylab("")+
+    geom_segment(aes(
+      feature, limit,
+      xend=feature, yend=limit+sign*slack),
+      data=data.table(best.slack, y="log(penalty)"),
+      color="red")+
+    geom_segment(aes(
+      feature.min, log.penalty,
+      linetype=line,
+      xend=feature.max, yend=log.penalty),
+      data=data.table(model.dt, y="log(penalty)"),
+      size=1,
+      color="red")+
+    geom_vline(aes(
+      xintercept=pred.thresh),
+      data=show.thresh,
+      linetype="dotted",
+      color="violet")+
   scale_linetype_manual(values=c(prediction="solid", margin="dotted"))
 png("figure-penaltyLearning.png", 6, 6, units="in", res=100)
 print(gg)
 dev.off()
-
-## TODO: viz all thresholds for a given margin parameter.
 
 ## TODO: hold out half data, compute test error for different margin
 ## parameters.
