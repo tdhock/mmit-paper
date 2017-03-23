@@ -1,5 +1,10 @@
 Max margin interval trees
 
+** 22 March 2017
+
+[[http://bl.ocks.org/tdhock/raw/105352ef496c22a80aea7c326b64c0a3/][Interactive figure]]: select threshold on total cost curves, see updated
+prediction, margin and slack.
+
 ** 16 March 2017
 
 [[file:figure-penaltyLearning.R]] visualizes cost as a function of feature
