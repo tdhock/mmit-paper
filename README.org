@@ -1,5 +1,30 @@
 Max margin interval trees
 
+** TODOs
+
+*** Penalty learning data sets
+
+- R pkg neuroblastoma + labels.
+- http://members.cbio.ensmp.fr/~thocking/neuroblastoma/signal.list.annotation.sets.RData
+  this data contains many different types of microarrays -- maybe
+  create a data set that groups them all together?
+- thocking@guillimin:PeakSegFPOP/ChIPseq.wholeGenome.rds contains
+  features + targets for genome wide ChIP-seq segmentation models
+  (PeakSegFPOP and PeakSegJoint).
+- TODO copy 7 benchmark data sets from work computer. TO benchmark web
+  page.
+
+*** Experiments
+
+- Does CV model comparison with targets result in the same conclusions
+  as if we used the actual label error function? Yes, in the case of
+  all open intervals and only one label per segmentation problem
+  (neuroblastoma data set). Try with detailed labels, and ChIP-seq
+  data sets, to see if same conclusions hold.
+- Does the linear model learn faster than the tree model? Fix a test
+  set, then plot test accuracy versus number of labeled segmentation
+  problems.
+
 ** 22 March 2017
 
 [[http://bl.ocks.org/tdhock/raw/105352ef496c22a80aea7c326b64c0a3/][Interactive figure]]: select threshold on total cost curves, see updated
