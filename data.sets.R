@@ -7,10 +7,13 @@ makeData <- function(features, targets){
   set.seed(1)
   colnames(targets) <- c("min.log.penalty", "max.log.penalty")
   has.finite.limit <- apply(is.finite(targets), 1, any)
-  list(
-    features=features[has.finite.limit, apply(is.finite(features), 2, all)],
-    targets=targets[has.finite.limit, ],
-    folds=data.table(fold=sample(rep(1:n.folds, l=sum(has.finite.limit)))))
+  n <- sum(has.finite.limit)
+  if(10 < n){
+    list(
+      features=features[has.finite.limit, apply(is.finite(features), 2, all)],
+      targets=targets[has.finite.limit, ],
+      folds=data.table(fold=sample(rep(1:n.folds, l=n))))
+  }
 }
 
 data(neuroblastomaProcessed, package="penaltyLearning")
