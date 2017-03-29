@@ -1,3 +1,10 @@
 *~
 .Rhistory
 library
+*.rds
+*.png
+*.RData
+*.tgz
+Rplots.pdf
+data
+README.html

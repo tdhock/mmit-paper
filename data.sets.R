@@ -103,13 +103,37 @@ for(set.name in names(annotation.sets)){
     ))
 }
 
+load("../PeakSegFPOP-paper/PDPA.targets.RData")
+load("../PeakSegFPOP-paper/problem.features.RData")
+
+set.name.vec <- unique(sub("/.*", "", names(problem.features)))
+for(set.name in set.name.vec){
+  chunk.name.vec <- grep(set.name, names(problem.features), value=TRUE)
+  set.targets.list <- list()
+  set.features.list <- list()
+  for(cname in chunk.name.vec){
+    chunk.targets <- PDPA.targets[chunk.name==cname, ]
+    chunk.features <- problem.features[[cname]]
+    set.targets.list[[cname]] <- chunk.targets[, cbind(
+      min.log.lambda, max.log.lambda)]
+    set.features.list[[cname]] <- chunk.features[chunk.targets$sample.id, ]
+  }
+  data.sets[[paste0(set.name, "_PDPA")]] <- makeData(
+    do.call(rbind, set.features.list),
+    do.call(rbind, set.targets.list))
+}
+
 if(!file.exists("ChIPseq.wholeGenome.rds")){
   system("scp thocking@guillimin.hpc.mcgill.ca:PeakSegFPOP/ChIPseq.wholeGenome.rds .")
 }
 ChIPseq.wholeGenome <- readRDS("ChIPseq.wholeGenome.rds")
 
 for(model.RData in names(ChIPseq.wholeGenome)){
-  new.name <- sub("[.].*", "", sub("/", "_", sub("labels/", "", model.RData)))
+  new.name <- sub(
+    "[.].*", "", sub(
+      "/", "_", sub(
+        "labels/", "", sub(
+          "model", "FPOP", model.RData))))
   set <- ChIPseq.wholeGenome[[model.RData]]
   data.sets[[new.name]] <- with(set, makeData(feature.mat, target.mat))
 }

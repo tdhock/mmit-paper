@@ -1,8 +1,20 @@
 Max margin interval trees
 
 ** TODOs
+*** Experiments
 
-*** Penalty learning data sets
+- Does CV model comparison with targets result in the same conclusions
+  as if we used the actual label error function? Yes, in the case of
+  all open intervals and only one label per segmentation problem
+  (neuroblastoma data set). Try with detailed labels, and ChIP-seq
+  data sets, to see if same conclusions hold.
+- Does the linear model learn faster than the tree model? Fix a test
+  set, then plot test accuracy versus number of labeled segmentation
+  problems.
+
+** 29 Mar 2017 
+
+26 penalty learning data sets created via [[file:data.sets.R]]
 
 - R pkg neuroblastoma + labels.
 - http://members.cbio.ensmp.fr/~thocking/neuroblastoma/signal.list.annotation.sets.RData
@@ -14,16 +26,8 @@ Max margin interval trees
 - TODO copy 7 benchmark data sets from work computer. TO benchmark web
   page. Scripts to compute [[https://github.com/tdhock/PeakSegFPOP-paper/blob/master/PDPA.targets.R][targets]] and [[https://github.com/tdhock/PeakSegFPOP-paper/blob/master/problem.features.R][features]].
 
-*** Experiments
-
-- Does CV model comparison with targets result in the same conclusions
-  as if we used the actual label error function? Yes, in the case of
-  all open intervals and only one label per segmentation problem
-  (neuroblastoma data set). Try with detailed labels, and ChIP-seq
-  data sets, to see if same conclusions hold.
-- Does the linear model learn faster than the tree model? Fix a test
-  set, then plot test accuracy versus number of labeled segmentation
-  problems.
+[[file:figure-data-set-sizes.R]] makes this plot:
+[[file:figure-data-set-sizes.png]]
 
 ** 22 March 2017
 

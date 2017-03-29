@@ -57,6 +57,7 @@ works_with_R(
   "3.3.3",
   data.table="1.10.4",
   Segmentor3IsBack="2.0",
+  ggrepel="0.6.5",
   "tdhock/penaltyLearning@ed9da265bff725efcd714a05592a5ab33fed3d99",
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",
   "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
