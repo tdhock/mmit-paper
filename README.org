@@ -14,7 +14,26 @@ Max margin interval trees
 
 ** 29 Mar 2017 
 
-26 penalty learning data sets created via [[file:data.sets.R]]
+[[file:penaltyLearning.predictions.R]] creates predictions files for
+IntervalRegresionCV (linear model with squared hinge loss + L1
+regularization).
+
+To make it easy to compare models which we fit in either R or Python, I would suggest that we save model predictions in the following format. Create a separate directory called "predictions" inside of which is one sub-directory for each model. Each model sub-directory would have another sub-directory for each data set, in which there is a predictions.csv file (n x 1 -- predicted values for each observation in 5-fold CV). For example
+
+project/data/lymphoma.mkatayama/features.csv
+project/predictions/mmit.linear.hinge/lymphoma.mkatayama/predictions.csv
+project/predictions/mmit.squared.hinge/lymphoma.mkatayama/predictions.csv
+etc
+
+26 penalty learning data sets created via [[file:data.sets.R]] (but one is
+less than 10 observations so we ignore it, leaving a total of 25 data
+sets). It creates a data directory with a subdirectory for each data
+set. Inside each of those are three files
+1. targets.csv is the n x 2 matrix of target intervals (outputs).
+2. features.csv is the n x p matrix of features (inputs). p is
+   different for each data set.
+3. folds.csv is a n x 1 vector of fold IDs -- for comparing model
+   predictions using 5-fold cross-validation.
 
 - R pkg neuroblastoma + labels.
 - http://members.cbio.ensmp.fr/~thocking/neuroblastoma/signal.list.annotation.sets.RData
@@ -26,7 +45,15 @@ Max margin interval trees
 - TODO copy 7 benchmark data sets from work computer. TO benchmark web
   page. Scripts to compute [[https://github.com/tdhock/PeakSegFPOP-paper/blob/master/PDPA.targets.R][targets]] and [[https://github.com/tdhock/PeakSegFPOP-paper/blob/master/problem.features.R][features]].
 
-[[file:figure-data-set-sizes.R]] makes this plot:
+[[file:figure-data-set-sizes.R]] shows a summary of the dimensions of the
+25 data sets, each of which should be treated as a separate learning
+problem.
+- the number of features varies from 26 to 259.
+- the number of observations varies from 13 to 3418.
+- some data sets are "fat" (n < p) and others are tall (p < n)
+- some data sets have more upper limits, others have more lower limits.
+- the penalty functions are for four types of segmentation models.
+
 [[file:figure-data-set-sizes.png]]
 
 ** 22 March 2017

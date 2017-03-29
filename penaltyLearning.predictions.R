@@ -1,5 +1,10 @@
 source("packages.R")
 
+## TODO: seems to hang on
+##  19 /   25 lymphoma.mkatayama test fold=1
+
+## TODO: cache! if(file.exists(predictions.csv)...
+
 set.dir.vec <- Sys.glob(file.path("data", "*"))
 penaltyLearning.predictions <- list()
 for(set.dir.i in seq_along(set.dir.vec)){
