@@ -1,3 +1,5 @@
+penaltyLearning.predictions.RData: penaltyLearning.predictions.R
+	R --no-save < $<
 figure-data-set-sizes.png: figure-data-set-sizes.R data.sets.RData
 	R --no-save < $<
 data.sets.RData: data.sets.R

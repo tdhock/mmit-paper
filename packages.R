@@ -58,11 +58,14 @@ works_with_R(
   data.table="1.10.4",
   Segmentor3IsBack="2.0",
   ggrepel="0.6.5",
+  doParallel="1.0.6",
   "tdhock/penaltyLearning@ed9da265bff725efcd714a05592a5ab33fed3d99",
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",
+  "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
   "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
 requireGitHub::requireGitHub_package(
   "aldro61",
   "mmit/Rpackage",
   "edf81ba77fdd4b005ad89b81d9e12d289c8146e9",
   "mmit")
+registerDoParallel()
