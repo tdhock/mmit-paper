@@ -12,7 +12,7 @@ Max margin interval trees
   features + targets for genome wide ChIP-seq segmentation models
   (PeakSegFPOP and PeakSegJoint).
 - TODO copy 7 benchmark data sets from work computer. TO benchmark web
-  page.
+  page. Scripts to compute [[https://github.com/tdhock/PeakSegFPOP-paper/blob/master/PDPA.targets.R][targets]] and [[https://github.com/tdhock/PeakSegFPOP-paper/blob/master/problem.features.R][features]].
 
 *** Experiments
 
