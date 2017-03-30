@@ -59,7 +59,7 @@ works_with_R(
   Segmentor3IsBack="2.0",
   ggrepel="0.6.5",
   doParallel="1.0.6",
-  "tdhock/penaltyLearning@ed9da265bff725efcd714a05592a5ab33fed3d99",
+  "tdhock/penaltyLearning@1c36935f2984541e793b9d8de27c3060fd208a41",
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",
   "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
   "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
