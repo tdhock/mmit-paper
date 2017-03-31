@@ -8,7 +8,7 @@ makeData <- function(features, targets){
   colnames(targets) <- c("min.log.penalty", "max.log.penalty")
   has.finite.limit <- apply(is.finite(targets), 1, any)
   n <- sum(has.finite.limit)
-  if(10 < n){
+  if(13 < n){
     list(
       features=features[has.finite.limit, apply(is.finite(features), 2, all)],
       targets=targets[has.finite.limit, ],

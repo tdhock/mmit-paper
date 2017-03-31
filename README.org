@@ -12,6 +12,22 @@ Max margin interval trees
   set, then plot test accuracy versus number of labeled segmentation
   problems.
 
+** 31 Mar 2017
+
+Created a new filter when making data sets (observations must be
+greater than 13), which removed H3K36me3_TDH_other_joint (it had one
+fold with no negative labels, so we can't compute AUC). So now there
+are 24 data sets in
+http://cbio.ensmp.fr/~thocking/data/penalty-learning-interval-regression-problems.tgz
+
+[[file:figure-evaluate-predictions.R]] creates figures that compare the
+prediction accuracy. Right now I have just computed
+IntervalRegressionCV (linear model trained by minimizing squared hinge
+loss + L1 penalty) and constant (baseline model that just learns the
+constant penalty with minimum incorrect target intervals). We can see
+that IntervalRegressionCV does better in the tall data setting, and
+does about the same in the fat data setting.
+
 ** 29 Mar 2017 
 
 [[file:penaltyLearning.predictions.R]] creates predictions files for

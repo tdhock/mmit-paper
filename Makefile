@@ -1,3 +1,5 @@
+figure-evaluate-predictions.png: figure-evaluate-predictions.R evaluate.predictions.RData
+	R --no-save < $<
 evaluate.predictions.RData: evaluate.predictions.R
 	R --no-save < $<
 constant.predictions.RData: constant.predictions.R

@@ -13,16 +13,14 @@ for(predictions.csv.i in seq_along(predictions.csv.vec)){
   targets.dt <- fread(file.path("data", set.name, "targets.csv"))
   folds.dt <- fread(file.path("data", set.name, "folds.csv"))
   targets.pred.fold <- data.table(targets.dt, predictions.dt, folds.dt)
-  if(13 < nrow(targets.dt)){
-    evaluate.predictions.list[[predictions.csv]] <- targets.pred.fold[, {
-      roc.list <- targetIntervalROC(
-        cbind(min.log.penalty, max.log.penalty), pred.log.penalty)
-      with(roc.list, data.table(
-        set.name,
-        model.name,
-        auc, error.percent=thresholds[threshold=="predicted", error.percent]))
-    }, by=list(fold)]
-  }
+  evaluate.predictions.list[[predictions.csv]] <- targets.pred.fold[, {
+    roc.list <- targetIntervalROC(
+      cbind(min.log.penalty, max.log.penalty), pred.log.penalty)
+    with(roc.list, data.table(
+      set.name,
+      model.name,
+      auc, error.percent=thresholds[threshold=="predicted", error.percent]))
+  }, by=list(fold)]
 }
 evaluate.predictions <- do.call(rbind, evaluate.predictions.list)
 
