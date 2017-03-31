@@ -69,6 +69,7 @@ gg.colors <- ggplot()+
              data=evaluate.tall)+
   theme_bw()+
   theme(
+    legend.position="bottom",
     panel.margin=grid::unit(0, "lines"),
     axis.text.y=element_text(family="mono", size=10))+
   facet_grid(. ~ variable, scales="free")+
