@@ -9,3 +9,14 @@ Rplots.pdf
 data
 README.html
 predictions
+tikzMetrics
+*.aux
+HOCKING-notes.pdf
+*.log
+*.csv
+.httr-oauth
+auto
+aichi-backup
+figure-*/
+figure-*.tex
+figure-*.pdf

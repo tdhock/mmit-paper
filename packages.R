@@ -56,21 +56,28 @@ options(repos="http://cloud.r-project.org")
 works_with_R(
   "3.3.3",
   data.table="1.10.4",
+  tikzDevice="0.10.1",
   Segmentor3IsBack="2.0",
   ggrepel="0.6.5",
   doParallel="1.0.6",
   partykit="2.0.2",#R CMD INSTALL partykit/pkg/devel/partykit/
   libcoin="0.9.1",
   mlt="0.1.3",
-  trtf="0.1.1",#R CMD INSTALL ctm/pkg/trtf/
-  survival="2.41.2",
+  survival="2.41.2",#this version is important! otherwise trtf wont work!
   "tdhock/penaltyLearning@1c36935f2984541e793b9d8de27c3060fd208a41",
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",
   "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
-  "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
+  "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f",
+  trtf="0.1.1")#R CMD INSTALL ctm/pkg/trtf/  
 requireGitHub::requireGitHub_package(
   "aldro61",
   "mmit/Rpackage",
   "edf81ba77fdd4b005ad89b81d9e12d289c8146e9",
   "mmit")
 registerDoParallel()
+options(
+  tikzDocumentDeclaration=paste(
+    "\\documentclass[12pt]{article}",
+    "\\usepackage{amsmath,amssymb,amsthm}"),
+  tikzMetricsDictionary="tikzMetrics")
+

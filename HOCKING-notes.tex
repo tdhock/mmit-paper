@@ -1,0 +1,297 @@
+\documentclass{article}
+
+\usepackage[cm]{fullpage}
+\usepackage{tikz}
+\usepackage{algorithm,algorithmic}
+\usepackage{amssymb,amsmath}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\minimize}{minimize}
+
+\begin{document}
+
+\section{Problem}
+Let $y_1,\dots,y_n\in\mathbb R$ and $s_1,\dots,s_n\in\{-1,1\}$ be the
+limits and their signs ($s_i=-1$ for a lower limit and $s_i=1$ for an
+upper limit). Let $\epsilon\in\mathbb R$ be a margin parameter, and
+let $\phi(x)=\ell[(x)_+]$ be a hinge loss, where $(x)_+$ is the
+positive part function. We will explore two hinge loss functions: the
+linear hinge loss $\ell(x)=x$, and the squared hinge loss
+$\ell(x)=x^2$.
+
+To choose the best split at any given step in the tree model fitting
+algorithm, we need to find the predicted values below
+$\mu_1\in\mathbb R$ and above $\mu_2\in\mathbb R$ a threshold
+$t\in\{1,\dots,n-1\}$ (assume the outputs $y_1,\dots,y_n$ are sorted
+with respect to an input variable $x_1<\cdots x_n$).  The total hinge
+loss up to data point $t$ is
+\begin{equation}
+  \label{eq:underline_C}
+  \underline C_t(\mu) = \sum_{i=1}^t \phi[s_i(\mu-y_i)+\epsilon],
+\end{equation}
+and the total hinge loss after data point $t$ is
+\begin{equation}
+  \label{eq:overline_C}
+  \overline C_t(\mu) = \sum_{i=t+1}^n \phi[s_i(\mu-y_i)+\epsilon].
+\end{equation}
+Note that $\underline C_t$ and $\overline C_t$ are convex, because
+each is defined as the sum of convex functions. But there are $n-1$
+possible splits, so the search for the best split is a discrete
+optimization problem:
+\begin{equation}
+  \label{eq:min_hinge_loss}
+  \min_{
+    t\in\{1,\dots,n-1\},
+    \mu_1\in\mathbb R,
+    \mu_2\in\mathbb R
+  }
+  \underline C_t(\mu_1) + \overline C_t(\mu_2) = 
+  \min_{
+    t\in\{1,\dots,n-1\}
+  }
+  \underline{ C}^*_t + \overline C^*_t.
+\end{equation}
+In the next section we propose a dynamic programming algorithm for
+computing the vector of optimal cost
+$\underline{ C}^*_1,\dots,\underline{ C}^*_n$ values.
+
+\section{Algorithm}
+
+The optimal cost function $\underline C_t(\mu)$ is piecewise
+quadratic, and can be recursively computed using a dynamic programming
+algorithm. First we define how we will store these functions, and then
+we provide the dynamic programming update rules.
+
+\subsection{Definition and storage of piecewise quadratic functions}
+We will write and store the cost in terms of quadratic
+functions:
+\begin{equation}
+  \label{eq:F}
+  \mathcal F = \{
+  f:\mathbb R \rightarrow \mathbb R\mid
+  f(\mu) = a\mu^2 + b\mu + c 
+  \text{ for some }a,b,c\in\mathbb R
+  \}
+\end{equation}
+Note that $\ell\in\mathcal F$ but $\phi\not\in\mathcal F$, so
+$\underline C_t\not\in \mathcal F$. In order to describe the piecewise
+function $\underline C_t$, we first define the space of all
+possible breakpoints in such functions:
+\begin{equation}
+  \label{eq:B^t}
+  \mathcal B^t = \{
+  (b,f)\in\mathbb R^t\times \mathcal F^t \mid
+  b_1 < \cdots < b_t
+  \}.
+\end{equation}
+
+\begin{figure*}
+  \hskip -0.3cm
+  \input{figure-algorithm-steps}
+  \vskip -0.8cm
+  \caption{First two steps of the dynamic programming algorithm for
+    the data $y_1=4, s_1=1, y_2=1, s_2=-1$ and margin $\epsilon=1$
+    using the linear hinge loss $\ell(x)=x$. \textbf{Left:} the
+    algorithm begins by creating a first breakpoint at
+    $b_{1,1}=y_1-\epsilon=3$, with corresponding function
+    $f_{1,1}(\mu)=\mu-3$. The algorithm also stores the cost function
+    $m_1(\mu)=\mu-3$ on the interval to the left of the pointer
+    $j_1=2$. Note that the cost $c_{1,1}$ before the first breakpoint
+    is not yet stored by the algorithm. \textbf{Middle:} the
+    optimization step is to move the pointer to the minimum
+    ($J_1=j_1-1$), and update the cost function,
+    $M_1(\mu)=m_1(\mu) -f_{1,1}(\mu)$.  \textbf{Right:} the algorithm
+    adds the second breakpoint at $b_{2,1}=y_2+\epsilon=2$ with
+    $f_{2,1}(\mu)=\mu-2$. The cost at the pointer is not affected by
+    the new data point, so the pointer does not move.}
+  \label{fig:algorithm-steps}
+\end{figure*}
+
+Every $B\in\mathcal B^t$ is a set of $t$ sorted breakpoints
+$b_1<\cdots<b_t$, each with a corresponding function
+$f_i\in\mathcal F$. Now, we can use these breakpoints to define
+piecewise quadratic functions.
+\begin{definition}[Storage for piecewise quadratic function with $t$ breakpoints]
+  For any index $J\in\{1,\dots, t+1\}$, function $M\in\mathcal F$,
+  breakpoints $B\in\mathcal B^t$, we define
+$$ 
+P_{J,M,B}(\mu) = M(\mu)
+-\sum_{i=1}^{J-1} f_i(\mu) I[\mu < b_i]
++\sum_{i=J}^t     f_i(\mu) I[b_i < \mu],
+$$
+where $I$ is the indicator function (one if true and zero otherwise).
+\end{definition}
+This definition assumes that $M(\mu)$ is the $J$-th function piece,
+and that each function $f_i$ is the difference between cost functions
+on either side of breakpoint $b_i$ (see
+Figure~\ref{fig:algorithm-steps}). More precisely, for all
+$i\in\{1,\dots,t+1\}$, let $c_i\in\mathcal F$ be the cost function
+between breakpoints $b_{i-1}$ and $b_i$ (using the convention
+$b_0=-\infty$ and $b_{t+1}=\infty$). Then
+$c_i(\mu)+f_i(\mu)=c_{i+1}(\mu)$ for all breakpoints
+$i\in\{1,\dots,t\}$.
+\begin{example}
+  The positive part function is a piecewise quadratic function with
+  $t=1$ breakpoint. Let $B=\{(0,\mu\mapsto\mu)\}$ be the set which
+  contains one breakpoint. The cost before the breakpoint is
+  $c_1(\mu)=0$ and the cost after the breakpoint is
+  $c_2(\mu)=\mu$. The positive part function $(\mu)_+$ is equivalent
+  to $P_{1,c_1,B}(\mu)=0+\mu I[0 < \mu]$ and
+  $P_{2,c_2,B}(\mu)=\mu - \mu I[\mu < 0]$.
+\end{example}
+%\begin{theorem}[Dynamic programming computation of total hinge loss]
+\subsection{Dynamic programming computation of total hinge loss}
+The total hinge loss is a piecewise quadratic function with $t$
+breakpoints $\underline C_t(\mu)=P_{J_t,M_t,B_t}(\mu)$, where
+$B_t,J_t,M_t$ can be recursively computed using the following dynamic
+programming update rules. The initialization is
+\begin{equation}
+  \label{eq:init}
+  B_0=\{\},\, J_0=1,\, M_0(\mu)=0
+\end{equation}
+The set of breakpoints and corresponding difference functions is
+$B_t\in\mathcal B^t$. Its update rule is to insert the new breakpoint
+and difference function:
+\begin{equation}
+  \label{eq:B_t}
+  B_t=B_{t-1}\cup \{(y_t-s_t\epsilon,\, s_t\ell[s_t(\mu-y_t)+\epsilon])\}
+\end{equation}
+The pointer before optimization is $j_t\in\{1,\dots,t+1\}$. It is
+updated by adding one if the new breakpoint is before the old
+pointer. The notation $b_{t,i}\in\mathbb R$ means the $i$-th
+breakpoint in $B_t$.
+\begin{equation}
+  \label{eq:j_t}
+  j_t = J_{t-1} + I[y_t-s_t\epsilon < b_{t-1,J_{t-1}}]
+\end{equation}
+The cost before optimization is $m_t\in\mathcal F$. It is updated by adding the
+cost of the new data point, if it is positive at the pointer:
+\begin{equation}
+  \label{eq:m_t}
+  m_t(\mu) = M_{t-1}(\mu) + 
+  \ell[s_t(\mu-y_t)+\epsilon]
+  I[0<s_t(b_{t,j_t}-y_t)+\epsilon]
+\end{equation}
+The pointer after optimization is $J_t\in\{1,\dots,t+1\}$. It is
+updated by moving it to the right of the interval that contains the
+new minimum (see Figure~\ref{fig:algorithm-steps}). The notation
+$c_{t,i}\in\mathcal F$ means the cost function of the $i$-th interval
+(between $b_{t,i-1}$ and $b_{t,i}$), which are not all stored at
+once. However, we know that $c_{t,j_t}(\mu)=m_t(\mu)$ and since the
+cost function is convex, we need only move the pointer to the left or
+the right until we find the global minimum:
+\begin{equation}
+  \label{eq:J_t}
+  J_t = \argmin_{i\in\{1,\dots, t+1\}}
+  \min_{\mu\in(b_{t,i-1},b_{t,i}]} c_{t,i}(\mu)
+\end{equation}
+The cost after optimization is $M_t\in\mathcal F$, and it is updated every time
+the pointer is moved, by adding or subtracting an $f_{t,i}$ function
+(the function stored in $B_t$ at $b_{t,i}$).
+\begin{equation}
+  \label{eq:M_t}
+  M_t(\mu)=m_t(\mu) +
+  \begin{cases}
+    0 & \text{ if } j_t = J_t\\
+    \sum_{i=j_t}^{J_t-1} f_{t,i}(\mu) & \text{ if } j_t < J_t\\
+    -\sum_{i=J_t}^{j_t-1} f_{t,i}(\mu) & \text{ if } J_t < j_t
+  \end{cases}
+\end{equation}
+Finally, the optimization problem can be solved using
+$\min_\mu\underline
+C_t(\mu)=\min_{\mu\in(b_{t,J_t-1},b_{t,J_t}]}M_t(\mu)$.
+
+%\end{theorem}
+
+\subsection{Implementation details and complexity analysis}
+
+We propose to store each quadratic function $f\in\mathcal F$,
+$f(\mu)=a\mu^2 + b\mu + c$ in terms of its three coefficients
+$a,b,c\in\mathbb R$. Update rule (\ref{eq:m_t}) can thus be
+implemented in constant $O(1)$ time, by simply adding the coefficients of
+$M_{t-1}(\mu)$ and $\ell[s_t(\mu-y_t)+\epsilon]$
+(line~\ref{line:add-coefs} of Algorithm~\ref{algo:dp}). Note that
+$B[J].\text{breakpoint}$ in Algorithm~\ref{algo:dp} is the 
+breakpoint at the pointer ($b_{t,j_t}$ in equation~\ref{eq:m_t}).
+
+We propose to store the set of breakpoints $B_t$ using the map
+container of the C++ Standard Template Library ($B$ in
+Algorithm~\ref{algo:dp}). It guarantees that the insert breakpoint
+operation of update rule (\ref{eq:B_t}) takes $O(\log t)$ time
+(line~\ref{line:insert}). The pointers $j_t$ and $J_t$ can be implemented
+using a map::iterator ($J$ in Algorithm~\ref{algo:dp}). So update rule
+(\ref{eq:j_t}) happens automatically when the new breakpoint is
+inserted -- the variable $J$ is $J_{t-1}$ before the insert, and it
+becomes $j_t$ after the insert.
+
+Update rules for $J_t$ (\ref{eq:J_t}) and $M_t$ (\ref{eq:M_t}) are
+implemented in the while loop on
+lines~\ref{line:while}--\ref{line:else} of
+Algorithm~\ref{algo:dp}. Each iteration of the while loop is a
+constant $O(1)$ time operation. The MinInInterval sub-routine exploits
+the convexity of the cost function, and returns TRUE if the minimum of
+$M_t(\mu)$ occurs between $b_{t,J-1}=B[J-1].\text{breakpoint}$ and
+$b_{t,J}=B[J].\text{breakpoint}$. This can be implemented by testing
+the derivative of $M$ at the limits, by using the fact that
+$M_t(\mu)=c_{t,J}(\mu)$ for the current pointer $J$. If the slope is
+positive on the left $0<c_{t,J}'(b_{t,J-1})$, then $M_t$ is increasing
+in the interval, and the pointer should be moved left
+(line~\ref{line:increasing} of Algorithm~\ref{algo:dp}). If the slope
+is negative on the right $c_{t,J}'(b_{t,J})<0$, then $M_t$ is
+decreasing in the interval, and the pointer should be moved left
+(line~\ref{line:else} of Algorithm~\ref{algo:dp}).
+
+Once the pointer has been moved to the interval that contains the
+minimum, the Minimize sub-routine returns an optimal prediction
+$\mu_t^*$ and cost $C_t^*$ (line~\ref{line:Minimize}) in constant
+$O(1)$ time.
+
+Overall, the complexity of Algorithm~\ref{algo:dp} is $O(n)$ space and
+$O(n (m + \log n))$ time, where $m$ is the average number of pointer moves
+(the while loop, line~\ref{line:while}). TODO: explore worst-case
+complexity with pathological data sets -- can we get a data set which
+has $O(t)$ pointer moves, resulting in $O(n^2)$ overall time
+complexity? For the linear hinge loss $m=O(1)$, TODO proof. For the
+squared hinge loss we show empirically that the number of moves is
+constant. The overall empirical time complexity is thus $O(n\log n)$.
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\STATE Input: 
+limits $\mathbf y\in\mathbb R^n$, 
+signs $s\in\{-1,1\}$, 
+margin $\epsilon\in\mathbb R$.
+\STATE Initialize: 
+$B\gets\text{map}\{\},\ J\gets B.\text{end}(),\ M\gets\text{Coefs(0)}$
+\STATE for data points $t$ from 1 to $n$:
+\begin{ALC@g}
+  \STATE $f\gets\text{Coefs}[s_t\ell(s_t(\mu-y_t)+\epsilon)]$
+  \STATE $b\gets y_t - s_t\epsilon$
+  \STATE $B.\text{insert}(b, f)$ \label{line:insert}
+  \STATE if $0 < s_t(B[J].\text{breakpoint}-y_t)+\epsilon$:
+  \begin{ALC@g}
+    \STATE $M$ += $\text{Coefs}[\ell(s_t(\mu-y_t)+\epsilon)]$
+    \label{line:add-coefs}
+  \end{ALC@g}
+  \STATE while $!\text{MinInInterval}(M,B,J)$:
+  \label{line:while}
+  \begin{ALC@g}
+    \STATE if $\text{Increasing}(M)$: $J--$; $M$ $-$= $B[J].\text{function}$
+    \label{line:increasing}
+    \STATE else: $M$ += $B[J].\text{function}$; $J++$
+    \label{line:else}
+  \end{ALC@g}
+  \STATE $\mu_t^*, C_t^*\gets\text{Minimize}(M,B,J)$
+  \label{line:Minimize}
+\end{ALC@g}
+\STATE Output: $\mu^*\in\mathbb R^n, C^*\in\mathbb R^n$
+\caption{\label{algo:dp}Dynamic programming algorithm for
+  computing minimum total hinge loss.}
+\end{algorithmic}
+\end{algorithm}
+
+
+\end{document}
+

@@ -1,3 +1,7 @@
+HOCKING-notes.pdf: HOCKING-notes.tex figure-algorithm-steps.tex
+	pdflatex HOCKING-notes
+figure-algorithm-steps.tex: figure-algorithm-steps.R
+	R --no-save < $<
 figure-evaluate-predictions.png: figure-evaluate-predictions.R evaluate.predictions.RData
 	R --no-save < $<
 evaluate.predictions.RData: evaluate.predictions.R
