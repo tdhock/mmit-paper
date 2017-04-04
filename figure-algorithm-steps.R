@@ -147,7 +147,12 @@ gg <- ggplot()+
   scale_y_continuous("cost")+
   scale_x_continuous("predicted value $\\mu$")+
   coord_cartesian(xlim=c(0.9,4.1), ylim=c(-1, 1.8), expand=FALSE)
+tikz("figure-algorithm-steps-standalone.tex", 7.5, 2.5, standAlone=TRUE)
+print(gg)
+dev.off()
+code <- system("pdflatex figure-algorithm-steps-standalone && convert -density 150 -trim figure-algorithm-steps-standalone.pdf -quality 100 -flatten -sharpen 0x1.0 figure-algorithm-steps.png")
+if(code!=0)stop(code)
 tikz("figure-algorithm-steps.tex", 7.5, 2.5, standAlone=FALSE)
 print(gg)
 dev.off()
-##system("pdflatex figure-algorithm-steps.tex")
+
