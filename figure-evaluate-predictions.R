@@ -19,7 +19,7 @@ data.set.sizes[, percent.upper := 100*upper.limits/(upper.limits+lower.limits)]
 
 evaluate.predictions[, accuracy.percent := 100 - error.percent]
 evaluate.tall <- melt(
-  evaluate.predictions,
+  evaluate.predictions[model.name!="iregnet"],
   id.vars=c("fold", "set.name", "model.name"),
   measure.vars=c("auc", "accuracy.percent"))
 mean.dt <- evaluate.tall[, list(
@@ -57,7 +57,15 @@ gg.panels <- ggplot()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(set.name ~ variable, scales="free")
 
+##dput(RColorBrewer::brewer.pal(Inf, "Set2"))
+algo.colors <- c(
+  IntervalRegressionCV="#66C2A5",
+  trafotree="#FC8D62",
+  trafotree0.95="#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", 
+  "#E5C494",
+  constant="#B3B3B3")#grey
 gg.colors <- ggplot()+
+  scale_color_manual(values=algo.colors)+
   geom_point(aes(
     mean, set.fac, color=model.name),
              alpha=0.5,
