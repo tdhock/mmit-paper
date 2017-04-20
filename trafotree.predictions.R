@@ -1,4 +1,5 @@
 source("packages.R")
+library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
 
 trafotreeNormal <- function(X, y, ...){
   finite.targets <- data.frame(log.penalty=y[is.finite(y)])

@@ -68,8 +68,7 @@ works_with_R(
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",
   "anujkhare/iregnet@93729931a69f896dd752f5065c0d2e8859ed161f",
   "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
-  "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f",
-  trtf="0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
+  "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
 requireGitHub::requireGitHub_package(
   "aldro61",
   "mmit/Rpackage",
