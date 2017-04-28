@@ -9,6 +9,10 @@
 ### GitHub packages, write "user/repo@commit"
 ### e.g. "tdhock/animint@f877163cd181f390de3ef9a38bb8bdd0396d08a4" and
 ### we use install_github to get it, if necessary.
+
+library(httr)
+set_config(config(ssl_verifypeer = 0L))
+
 works_with_R <- function(Rvers,...){
   local.lib <- file.path(getwd(), "library")
   dir.create(local.lib, showWarnings=FALSE, recursive=TRUE)
@@ -64,8 +68,8 @@ works_with_R(
   libcoin="0.9.1",
   mlt="0.1.3",
   survival="2.41.2",#this version is important! otherwise trtf wont work!
+  "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",  # This needs to be before penaltyLearning
   "tdhock/penaltyLearning@1c36935f2984541e793b9d8de27c3060fd208a41",
-  "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",
   "anujkhare/iregnet@93729931a69f896dd752f5065c0d2e8859ed161f",
   "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
   "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
