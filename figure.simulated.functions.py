@@ -38,7 +38,7 @@ class Dataset(object):
 
 if __name__ == "__main__":
     include_datasets = {"simulated.linear": "$f(x) = x/5$",
-                        "simulated.log": "$f(x) = log(x+1)$",
+                        "simulated.abs": "$f(x) = |x|$",
                         "simulated.sin": "$f(x) = sin(x)$"}
     include_methods = ["mmit.squared.hinge.pruning", "IntervalRegressionCV"]
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     sns.set_style("white")
     cmap = sns.color_palette("hls", len(include_methods))
     bound_alpha = 0.3
-    linewidth = 1.2
+    linewidth = 1.5
 
     fig, axes = plt.subplots(ncols=len(datasets))
     fig.set_size_inches(15, 4.5)
@@ -69,11 +69,11 @@ if __name__ == "__main__":
             p = pd.read_csv("./predictions/{0!s}/{1!s}/predictions.fulltrain.csv".format(m, d.name)).values[x_sorter]
 
             ax.plot(x, p, label=m, color=cmap[m_idx], linewidth=linewidth)
-            #for xi, pi, yi in zip(x, p, y):
-            #    if pi < yi[0]:
-            #        ax.vlines(xi, pi, yi[0], color=cmap[m_idx], linestyle="-", alpha=0.5, linewidth=linewidth)
-            #    elif yi[1] < pi:
-            #        ax.vlines(xi, yi[1], pi, color=cmap[m_idx], linestyle="-", alpha=0.5, linewidth=linewidth)
+            for xi, pi, yi in zip(x, p, y):
+                if pi < yi[0]:
+                    ax.vlines(xi, pi, yi[0], color=cmap[m_idx], linestyle="-", alpha=0.5, linewidth=linewidth)
+                elif yi[1] < pi:
+                    ax.vlines(xi, yi[1], pi, color=cmap[m_idx], linestyle="-", alpha=0.5, linewidth=linewidth)
 
             #ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)

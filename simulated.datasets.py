@@ -61,8 +61,8 @@ def generate_function_datasets(datasets, random_seed=42):
         if not os.path.exists(ds_dir):
             os.mkdir(ds_dir)
 
-        header = ", ".join("x{0:d}".format(i) for i in xrange(X.shape[1]))
-        features = "\n".join(", ".join(str(xij) for xij in xi) for xi in X)
+        header = ",".join("x{0:d}".format(i) for i in xrange(X.shape[1]))
+        features = "\n".join(",".join(str(X[i, j]) for j in xrange(X.shape[1])) for i in xrange(X.shape[0]))
         open(os.path.join(ds_dir, "features.csv"), "w").writelines("\n".join([header, features]))
         open(os.path.join(ds_dir, "targets.csv"), "w").writelines(["min.log.penalty, max.log.penalty\n"] +
                                                                   ["{0:.6f}, {1:.6f}\n".format(yi[0], yi[1]) for yi in
