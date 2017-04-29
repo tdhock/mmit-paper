@@ -64,7 +64,7 @@ works_with_R(
   Segmentor3IsBack="2.0",
   ggrepel="0.6.5",
   doParallel="1.0.6",
-  partykit="2.0.2",#R CMD INSTALL partykit/pkg/devel/partykit/
+  partykit="1.2.0",
   libcoin="0.9.1",
   mlt="0.1.3",
   survival="2.41.2",#this version is important! otherwise trtf wont work!
