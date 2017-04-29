@@ -28,3 +28,5 @@ mmit.fulltrain.predictions: mmit.fulltrain.predictions.py
 	python $<
 figure.simulated.functions.pdf: figure.simulated.functions.py
 	python $<
+downloaded.datasets: downloaded.datasets.py
+	python $<
