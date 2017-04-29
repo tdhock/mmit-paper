@@ -16,3 +16,15 @@ data.sets.RData: data.sets.R
 	R --no-save < $<
 figure-penaltyLearning.png: figure-penaltyLearning.R
 	R --no-save < $<
+
+# Alex
+simulated.datasets: simulated.datasets.py
+	python $<
+penaltyLearning.fulltrain.predictions: penaltyLearning.fulltrain.predictions.R
+	R --no-save < $<
+mmit.predictions: mmit.predictions.py
+	python $<
+mmit.fulltrain.predictions: mmit.fulltrain.predictions.py
+	python $<
+figure.simulated.functions.pdf: figure.simulated.functions.py
+	python $<
