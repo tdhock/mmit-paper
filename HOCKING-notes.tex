@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage{natbib}
 \usepackage[cm]{fullpage}
 \usepackage{tikz}
 \usepackage{algorithm,algorithmic}
@@ -13,6 +14,69 @@
 \DeclareMathOperator*{\minimize}{minimize}
 
 \begin{document}
+
+\section{Introduction}
+Interval regression is a class of machine learning models for which
+the predicted value is a real number, but each output in the training
+data is an interval $(\underline y_i, \overline y_i)$.  In the
+terminology of the survival analysis literature, outputs may be either
+left-censored ($-\infty=\underline y_i<\overline y_i<\infty$),
+right-censored ($-\infty<\underline y_i<\overline y_i=\infty$), or
+interval-censored ($-\infty<\underline y_i<\overline y_i<\infty$).
+There are surprisingly few existing models that are designed to learn
+from these outputs, and most are linear models. In this paper we
+explore a nonlinear decision tree model for interval regression.
+
+
+Interval regression models are useful in several
+kinds of real data sets. One example is in data sequences measured
+over space or time, with labels for presence or absence of
+changepoints in particular data subsets \citep{HOCKING-penalties}. In
+this context, learning a penalty function for predicting the number of
+changepoints is an interval regression problem where each output is an
+interval of penalty values with minimal incorrect labels.
+
+\subsection{Contributions and organization}
+
+Our first contribution is Section~\ref{sec:model}, in which we propose
+a new nonlinear decision tree model for the interval regression
+problem. We propose to choose splits in the tree model using a
+margin-based hinge loss, which yields sequence of $n-1$ related convex
+optimization problems for each feature. Our second contribution is
+Section~\ref{sec:algorithm}, in which we propose a dynamic programming
+algorithm that computes the optimal solution to all $n-1$ problems in
+$O(n\log n)$ time. In Section~\ref{sec:results} we show that our
+algorithm achieves state-of-the-art prediction accuracy in several
+real and simulated data sets. In Section~\ref{sec:discussion} we
+discuss the significance of our contributions, and in
+Section~\ref{sec:conclusions} we propose possible future research
+directions.
+
+\section{Related work}
+
+A related problem is linear models for censored outputs, which has
+been extensively studied in the survival data analysis literature
+\citep{Wei1992}, under the name ``accelerated failure time models.''
+A distribution such as the logistic is assumed for the output value,
+and the cumulative distribution function replaces the density in the
+maximum likelihood inference problem \citep{log-logistic}. For
+unregularized models with few features, second-order optimization
+methods are typically used. 
+
+L1-regularized accelerated failure time models have recently been
+proposed in order to perform automatic feature selection in high
+dimensional data \citep{cai-regularized-aft,
+  huang-regularized-aft}. First-order optimization methods are
+typically used. 
+
+Nonlinear survival models are a relatively new research area,
+including models such as Support Vector Machines \citep{kssvm} and
+random forests \citep{survival-ensembles}. However, most models are
+limited to the case of right-censored and un-censored outputs. In
+contrast, in the interval regression setting that we consider, there
+are no un-censored outputs. The only existing nonlinear model for this
+setting is the recently proposed transformation forest of
+\citet{transformation-forests}.
 
 \section{Problem}
 Let $y_1,\dots,y_n\in\mathbb R$ and $s_1,\dots,s_n\in\{-1,1\}$ be the
@@ -188,7 +252,7 @@ the right until we find the global minimum:
 \begin{equation}
   \label{eq:J_t}
   J_t = \argmax_{i\in\{1,\dots,t+1\}}
-  |(b_{t,t-1}, b_{t,i}]\cap \argmin_{\mu\in\mathbb R}\underline C_t(\mu)
+  |(b_{t,t-1}, b_{t,i}]\cap \argmin_{\mu\in\mathbb R}\underline C_t(\mu)|
 \end{equation}
 The cost after optimization is $M_t\in\mathcal F$, and it is updated every time
 the pointer is moved, by adding or subtracting an $f_{t,i}$ function
@@ -309,7 +373,9 @@ the sum, and (\ref{eq:recursive-c-b}) results from applying recursive
 formulas for $c_{t,i}$ (\ref{eq:recursive-c}) and $b_{t,i}$
 (\ref{eq:recursive-b}). We then can prove the equality for $t$:
 \begin{eqnarray}
-  \phi[s_t(\mu-y_t)+\epsilon] + \underline C_{t-1}(\mu)
+\underline C_t(\mu)
+&=& \sum_{i=1}^t \phi[s_i(\mu-y_i)+\epsilon]\\
+&=& \phi[s_t(\mu-y_t)+\epsilon] + \underline C_{t-1}(\mu)\\
 &=& \ell[s_t(\mu-y_t)+\epsilon] I[\mu<y_t+\epsilon]+\underline C_{t-1}(\mu)\\
 &=& \ell[s_t(\mu-y_t)+\epsilon] I[\mu<b_{t,j}]+\nonumber\\
  &&\sum_{i=1}^{j} \big(c_{t,i}(\mu)-\ell[s_t(\mu-y_t)+\epsilon]\big)I[b_{t,i-1}\leq\mu\leq b_{t,i}]+\nonumber\\
@@ -321,7 +387,6 @@ formulas for $c_{t,i}$ (\ref{eq:recursive-c}) and $b_{t,i}$
 This concludes the proof of Lemma~\ref{lemma:cost-intervals} for the
 case of $s_t=-1$, and the case for $s_t=1$ is analogous.
 \end{proof}
-
 
 \begin{theorem}
   The optimization problem can be solved using
@@ -420,6 +485,8 @@ $B\gets\text{map}\{\},\ J\gets B.\text{end}(),\ M\gets\text{Coefs(0)}$
 \end{algorithmic}
 \end{algorithm}
 
+\bibliographystyle{natbib}
+\bibliography{refs}
 
 \end{document}
 
