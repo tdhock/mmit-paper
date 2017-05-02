@@ -20,7 +20,7 @@ figure-penaltyLearning.png: figure-penaltyLearning.R
 # Alex
 simulated.datasets: simulated.datasets.py
 	python $<
-penaltyLearning.fulltrain.predictions: penaltyLearning.fulltrain.predictions.R
+penaltyLearning.fulltrain.predictions: penaltyLearning.fulltrain.predictions.R ./data/*/targets.csv
 	R --no-save < $<
 mmit.predictions: mmit.predictions.py
 	python $<
@@ -28,5 +28,9 @@ mmit.fulltrain.predictions: mmit.fulltrain.predictions.py
 	python $<
 figure.simulated.functions.pdf: figure.simulated.functions.py
 	python $<
-downloaded.datasets: downloaded.datasets.py
+downloaded.datasets: downloaded.datasets.py 
+	python $<
+figure.mmit.margins: figure.mmit.margins.py ./predictions/mmit*/*/parameters.json
+	python $<
+cart.predictions: cart.predictions.py ./data/*/targets.csv
 	python $<
