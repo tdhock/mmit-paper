@@ -89,7 +89,8 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True, n_cpu=-
                 latex_exporter(cv.best_estimator_))
 
         # Save the predictions
-        open(join(ds_result_dir, "predictions.csv"), "w").write("\n".join(str(x) for x in fold_predictions))
+        open(join(ds_result_dir, "predictions.csv"), "w")\
+            .write("pred.log.penalty\n" + "\n".join(str(x) for x in fold_predictions))
 
         # Save the cross-validation results for each fold
         json.dump(fold_cv_results, open(join(ds_result_dir, "parameters.json"), "w"))
@@ -124,6 +125,7 @@ if __name__ == "__main__":
 
     datasets = list(find_datasets("./data"))
 
+    failed = []
     for method in run_algos:
         print(method)
 
@@ -145,4 +147,11 @@ if __name__ == "__main__":
         # Run on all datasets
         for i, d in enumerate(datasets):
             print("....{0:d}/{1:d}: {2!s}".format(i, len(datasets), d.name))
-            evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_cpu)
+            try:
+                evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_cpu)
+            except:
+                failed.append((method, d.name))
+
+    print("The following datasets failed to run:")
+    for method, d_name in failed:
+        print(method, d_name)
