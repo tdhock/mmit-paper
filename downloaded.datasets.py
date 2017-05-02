@@ -4,11 +4,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 
-from sklearn.datasets import load_svmlight_file
+from scipy.io.arff import loadarff
+# from sklearn.datasets import load_svmlight_file
 
-
-downloaded_data_path = "./downloaded.datasets"
+downloaded_data_path = "./downloaded.datasets/arff-datasets/regression"
 data_path = "./data"
 
 
@@ -34,17 +35,57 @@ def _generate_intervals_random_width(n_intervals, base_y=0., width_std=0.000001,
     return np.array(zip(lower, upper))
 
 
-if __name__ == "__main__":
-    # Find all libsvm format datasets
-    datasets = [f.replace(".libsvm", "") for f in os.listdir(downloaded_data_path) if ".libsvm" in f]
+def _replace_non_standard_values(data):
+    """
+    Replace categorical features by integers
 
+    """
+    X = np.zeros(data.shape, dtype=np.float)
+    for i in xrange(X.shape[1]):
+        if data[data.columns.values[i]].dtype != np.float64:
+            X[:, i] = np.unique(data.iloc[:, i], return_inverse=True)[1]
+        else:
+            X[:, i] = data.iloc[:, i]
+    return X
+
+
+if __name__ == "__main__":
+    min_examples = 50
+    max_examples = 8000
+
+    # Find all libsvm format datasets
+    datasets = [f.replace(".arff", "") for f in os.listdir(downloaded_data_path) if ".arff" in f]
+
+    n_datasets_generated = 0
     for d_idx, d_name in enumerate(datasets):
-        print "{0:d}/{1:d}: {2!s}".format(d_idx + 1, len(datasets), d_name)
+        print "{0:d}/{1:d}: {2!s}".format(d_idx + 1, len(datasets), d_name),
         random_state = np.random.RandomState(42)
         n_folds = 5
 
-        X, y_true = load_svmlight_file(os.path.join(downloaded_data_path, d_name + ".libsvm"))
-        X = X.todense()
+        #X, y_true = load_svmlight_file(os.path.join(downloaded_data_path, d_name + ".libsvm"))
+        #X = X.todense()
+
+        # Load the data
+        data, metadata = loadarff(os.path.join(downloaded_data_path, d_name + ".arff"))
+        data = pd.DataFrame(data).dropna()
+        if data.shape[0] > max_examples:
+            print "Skipped. Too big."
+            continue
+        elif data.shape[0] < min_examples:
+            print "Skipped. Too small."
+            continue
+        else:
+            n_datasets_generated += 1
+            print "Ok. Examples: {0:d} Features: {1:d}".format(data.shape[0], data.shape[1])
+
+        # Extract label
+        y_true = data.iloc[:, -1].values
+        y_name = data.columns.values[-1]
+        del data[data.columns.values[-1]]
+
+        # Extract the features
+        X_names = data.columns
+        X = _replace_non_standard_values(data)
 
         # Generate interval target values
         y = np.vstack((_generate_intervals_random_width(n_intervals=1, base_y=yi,
@@ -54,8 +95,9 @@ if __name__ == "__main__":
                        for yi in y_true))
 
         sorter = y_true.argsort()
+        plt.clf()
         plt.scatter(np.arange(len(y)), y_true[sorter], color="red", label="True target")
-        plt.scatter(np.arange(len(y)), np.array(zip(*y)[1])[sorter], edgecolor="red", facecolor="red", linewidth=1.0,
+        plt.scatter(np.arange(len(y)), np.array(zip(*y)[1])[sorter], edgecolor="green", facecolor="green", linewidth=1.0,
                     alpha=0.7, label="Upper bound")
         plt.scatter(np.arange(len(y)), np.array(zip(*y)[0])[sorter], edgecolor="blue", facecolor="none", linewidth=1.0,
                     alpha=0.7, label="Lower bound")
@@ -70,7 +112,7 @@ if __name__ == "__main__":
         ds_dir = os.path.join(data_path, d_name)
         if not os.path.exists(ds_dir):
             os.mkdir(ds_dir)
-        header = ",".join("x{0:d}".format(i) for i in xrange(X.shape[1]))
+        header = ",".join(X_names)
         features = "\n".join(",".join(str(X[i, j]) for j in xrange(X.shape[1])) for i in xrange(X.shape[0]))
         open(os.path.join(ds_dir, "features.csv"), "w").writelines("\n".join([header, features]))
         open(os.path.join(ds_dir, "targets.csv"), "w").writelines(["min.log.penalty,max.log.penalty\n"] +
@@ -78,3 +120,5 @@ if __name__ == "__main__":
                                                                    y])
         open(os.path.join(ds_dir, "folds.csv"), "w").writelines(["fold\n"] + ["{0:d}\n".format(f) for f in folds])
         plt.savefig(os.path.join(ds_dir, "signal.pdf"), bbox_inches="tight")
+
+    print "Generated {0!s} datasets".format(n_datasets_generated)
