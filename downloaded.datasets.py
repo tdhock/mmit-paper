@@ -7,6 +7,7 @@ import os
 import pandas as pd
 
 from scipy.io.arff import loadarff
+from sklearn.preprocessing import OneHotEncoder
 # from sklearn.datasets import load_svmlight_file
 
 downloaded_data_path = "./downloaded.datasets/arff-datasets/regression"
@@ -37,21 +38,25 @@ def _generate_intervals_random_width(n_intervals, base_y=0., width_std=0.000001,
 
 def _replace_non_standard_values(data):
     """
-    Replace categorical features by integers
+    Replace categorical features by their one-hot encoding
 
     """
+    categorical_idx = []
     X = np.zeros(data.shape, dtype=np.float)
     for i in xrange(X.shape[1]):
         if data[data.columns.values[i]].dtype != np.float64:
             X[:, i] = np.unique(data.iloc[:, i], return_inverse=True)[1]
+            categorical_idx.append(i)
         else:
             X[:, i] = data.iloc[:, i]
-    return X
+
+    # Replace all categorical features by their one hot encoding
+    return OneHotEncoder(categorical_features=categorical_idx, sparse=False).fit_transform(X)
 
 
 if __name__ == "__main__":
     min_examples = 50
-    max_examples = 8000
+    max_examples = 20000
 
     # Find all libsvm format datasets
     datasets = [f.replace(".arff", "") for f in os.listdir(downloaded_data_path) if ".arff" in f]
@@ -89,10 +94,13 @@ if __name__ == "__main__":
 
         # Generate interval target values
         y = np.vstack((_generate_intervals_random_width(n_intervals=1, base_y=yi,
-                                                        width_std=float(yi) / 3 if yi > 0 else 1e-1,
-                                                        y_shift_std=float(yi) / 10 if yi > 0 else 1e-2,
+                                                        width_std=np.abs(float(yi) / 3) if not np.isclose(yi, 0.) else 1e-1,
+                                                        y_shift_std=np.abs(float(yi) / 10) if not np.isclose(yi, 0.) else 1e-2,
                                                         open_interval_proba=0.1, random_state=random_state)
                        for yi in y_true))
+
+        for yl, yu in y:
+            assert yl < yu
 
         sorter = y_true.argsort()
         plt.clf()
