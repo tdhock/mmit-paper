@@ -74,9 +74,12 @@ if __name__ == "__main__":
         method = "mmit.linear.hinge.pruning"
         params = dict(param_template)
         params["loss"] = "hinge"
-        if not exists(join(predictions_path, method, d.name)) and \
+        if not exists(join(predictions_path, method, d.name)) or \
                 not exists(join(predictions_path, method, d.name, "predictions.fulltrain.csv")):
-            mkdir(join(predictions_path, method, d.name))
+            try:
+                mkdir(join(predictions_path, method, d.name))
+            except:
+                pass
             cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params, cv=10, n_jobs=n_cpu, scoring=mse_scorer,
                               pruning=True).fit(d.X, d.y)
             save_predictions(cv.best_estimator_, method, d, predictions_path)
@@ -85,9 +88,12 @@ if __name__ == "__main__":
         method = "mmit.squared.hinge.pruning"
         params = dict(param_template)
         params["loss"] = "squared_hinge"
-        if not exists(join(predictions_path, method, d.name)) and \
+        if not exists(join(predictions_path, method, d.name)) or \
                 not exists(join(predictions_path, method, d.name, "predictions.fulltrain.csv")):
-            mkdir(join(predictions_path, method, d.name))
+            try:
+                mkdir(join(predictions_path, method, d.name))
+            except:
+                pass
             cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params, cv=10, n_jobs=n_cpu, scoring=mse_scorer,
                               pruning=True).fit(d.X, d.y)
             save_predictions(cv.best_estimator_, method, d, predictions_path)
