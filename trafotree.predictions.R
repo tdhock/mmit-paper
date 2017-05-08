@@ -2,7 +2,10 @@ source("packages.R")
 library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
 ## more recent: svn up -r 734 && R CMD INSTALL basefun mlt trtf
 
+future::plan(multiprocess)
+
 trafotreeNormal <- function(X, y, ...){
+  . <- log.penalty <- NULL
   finite.targets <- data.frame(log.penalty=y[is.finite(y)])
   m <- ctm(as.basis(~log.penalty, data=finite.targets), todistr="Normal")
   train.Surv <- Surv(y[, 1], y[,2], type="interval2")
@@ -27,27 +30,26 @@ trafotreeCV <- function
    seq(0.9, 1, by=0.01))
  ){
   fold.vec <- sample(rep(1:n.folds, l=nrow(y.mat)))
-  tv.list <- list()
-  for(validation.fold in unique(fold.vec)){
+  tv.list <- future_lapply(unique(fold.vec), function(validation.fold){
     is.validation <- fold.vec==validation.fold
     is.train <- !is.validation
-    tv.list[[paste(validation.fold)]] <- foreach(
-      mc=mc.seq, .combine=rbind)%dopar%{
-    ##for(mc in mc.seq){
-        cat(sprintf("vfold=%d mc=%f\n", validation.fold, mc))
-        fit <- trafotreeNormal(
-          X.mat[is.train,],
-          y.mat[is.train,],
-          mincriterion=mc)
-        pred.log.penalty <- trafotreePredict(fit, X.mat)
-        is.lo <- pred.log.penalty < y.mat[,1]
-        is.hi <- y.mat[,2] < pred.log.penalty
-        data.table(is.train, is.error=is.lo|is.hi)[, {
-          errors <- sum(is.error)
-          data.table(validation.fold, mc, errors, error.percent=errors/.N*100)
-        }, by=list(set=ifelse(is.train, "train", "validation"))]
-      }
-  }
+    f.list <- future_lapply(mc.seq, function(mc){
+      cat(sprintf("vfold=%d mc=%f\n", validation.fold, mc))
+      fit <- trafotreeNormal(
+        X.mat[is.train,],
+        y.mat[is.train,],
+        mincriterion=mc)
+      pred.log.penalty <- trafotreePredict(fit, X.mat)
+      is.lo <- pred.log.penalty < y.mat[,1]
+      is.hi <- y.mat[,2] < pred.log.penalty
+      is.error <- is.lo|is.hi
+      data.table(is.train, is.error)[, {
+        errors <- sum(is.error)
+        data.table(validation.fold, mc, errors, error.percent=errors/.N*100)
+      }, by=list(set=ifelse(is.train, "train", "validation"))]
+    })
+    do.call(rbind, f.list)
+  })
   tv <- do.call(rbind, tv.list)
   tv.stats <- tv[, list(
     mean=mean(error.percent),
@@ -78,8 +80,7 @@ trafotreeCV <- function
 
 options(warn=2)
 set.dir.vec <- Sys.glob(file.path("data", "*"))
-trafotree0.95.predictions <- list()
-for(set.dir.i in seq_along(set.dir.vec)){
+trafotree0.95.predictions <- future_lapply(seq_along(set.dir.vec), function(set.dir.i){
   set.dir <- set.dir.vec[[set.dir.i]]
   set.name <- basename(set.dir)
   out.dir <- file.path("predictions", "trafotree0.95", set.name)
@@ -111,9 +112,8 @@ for(set.dir.i in seq_along(set.dir.vec)){
     dir.create(out.dir, showWarnings=TRUE, recursive=TRUE)
     fwrite(pred.dt, predictions.csv)
   }
-  trafotree0.95.predictions[[set.name]] <- list(
-    predictions=pred.dt)
-}
+  list(predictions=pred.dt)
+})
 
 trafotree.predictions <- list()
 for(set.dir.i in seq_along(set.dir.vec)){

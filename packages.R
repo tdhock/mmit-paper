@@ -67,6 +67,7 @@ works_with_R(
   partykit="1.2.0",
   libcoin="0.9.1",
   mlt="0.1.3",
+  future="1.4.0",
   survival="2.41.2",#this version is important! otherwise trtf wont work!
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",  # This needs to be before penaltyLearning
   "tdhock/penaltyLearning@1c36935f2984541e793b9d8de27c3060fd208a41",
