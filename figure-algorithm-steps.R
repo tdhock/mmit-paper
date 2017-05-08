@@ -54,13 +54,13 @@ break.labels <- rbind(data.table(
   pred=3.3,
   step=step(1),
   hjust=0.5,
-  cost=-c(0.2, 0.5),
+  cost=-c(0.2, 0.6),
   label=c("$b_{1,1}=3$", "$f_{1,1}(\\mu)=\\mu-3$")
 ), data.table(
   pred=rep(c(2, 3)+0.3*c(-1,1), each=2),
   step=step(3),
   hjust=0.5,
-  cost=-c(0.2, 0.5),
+  cost=-c(0.2, 0.6),
   label=c(
     "$b_{2,1}=2$", "$f_{2,1}(\\mu)=\\mu-2$"
    ,"$b_{2,2}=3$", "$f_{2,2}(\\mu)=\\mu-3$"
@@ -97,7 +97,7 @@ line.labels <- rbind(data.table(
   ),
   step=step(3)
 ))
-lab.size <- 3.5
+lab.size <- 3
 gg <- ggplot()+
   theme_grey()+
   theme(
@@ -114,7 +114,7 @@ gg <- ggplot()+
     pred, cost.from,
     xend=pred, yend=cost.to),
     color="blue",
-    arrow=grid::arrow(type="closed", length=grid::unit(0.25, "lines")),
+    arrow=grid::arrow(type="closed", length=grid::unit(0.15, "lines")),
     data=pointers)+
   geom_label(aes(
     pred, cost, label=label, hjust=hjust),
@@ -147,12 +147,14 @@ gg <- ggplot()+
   scale_y_continuous("cost")+
   scale_x_continuous("predicted value $\\mu$")+
   coord_cartesian(xlim=c(0.9,4.1), ylim=c(-1, 1.8), expand=FALSE)
-tikz("figure-algorithm-steps-standalone.tex", 7.5, 2.5, standAlone=TRUE)
+w <- 5.5
+h <- 2
+tikz("figure-algorithm-steps-standalone.tex", w, 2, standAlone=TRUE)
 print(gg)
 dev.off()
 code <- system("pdflatex figure-algorithm-steps-standalone && convert -density 150 -trim figure-algorithm-steps-standalone.pdf -quality 100 -flatten -sharpen 0x1.0 figure-algorithm-steps.png")
 if(code!=0)stop(code)
-tikz("figure-algorithm-steps.tex", 7.5, 2.5, standAlone=FALSE)
+tikz("figure-algorithm-steps.tex", w, 2, standAlone=FALSE)
 print(gg)
 dev.off()
 
