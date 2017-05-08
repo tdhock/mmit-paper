@@ -1,6 +1,6 @@
 source("packages.R")
 library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
-
+## more recent: svn up -r 734 && R CMD INSTALL basefun mlt trtf
 trafotreeNormal <- function(X, y, ...){
   finite.targets <- data.frame(log.penalty=y[is.finite(y)])
   m <- ctm(as.basis(~log.penalty, data=finite.targets), todistr="Normal")
@@ -76,43 +76,6 @@ trafotreeCV <- function
 }
 
 set.dir.vec <- Sys.glob(file.path("data", "*"))
-trafotree.predictions <- list()
-for(set.dir.i in seq_along(set.dir.vec)){
-  set.dir <- set.dir.vec[[set.dir.i]]
-  set.name <- basename(set.dir)
-  out.dir <- file.path("predictions", "trafotree", set.name)
-  predictions.csv <- file.path(out.dir, "predictions.csv")
-  if(file.exists(predictions.csv)){
-    pred.dt <- fread(predictions.csv)
-  }else{
-    features <- fread(file.path(set.dir, "features.csv"))
-    targets <- fread(file.path(set.dir, "targets.csv"))
-    folds <- fread(file.path(set.dir, "folds.csv"))
-    feature.mat <- as.matrix(features)
-    target.mat <- as.matrix(targets)
-    fold.vec <- sort(unique(folds$fold))
-    pred.dt <- data.table(pred.log.penalty=rep(NA_real_, nrow(features)))
-    for(test.fold in fold.vec){
-      cat(sprintf(
-        "%4d / %4d %s test fold=%d\n",
-        set.dir.i, length(set.dir.vec),
-        set.name, test.fold))
-      is.test <- folds$fold == test.fold
-      is.train <- !is.test
-      set.seed(1)
-      fit <- trafotreeCV(
-        feature.mat[is.train,], target.mat[is.train,])
-      pred.dt[is.test, pred.log.penalty := {
-        trafotreePredict(fit, feature.mat[is.test, ])
-      }]
-    }
-    dir.create(out.dir, showWarnings=TRUE, recursive=TRUE)
-    fwrite(pred.dt, predictions.csv)
-  }
-  trafotree.predictions[[set.name]] <- list(
-    predictions=pred.dt)
-}
-
 trafotree0.95.predictions <- list()
 for(set.dir.i in seq_along(set.dir.vec)){
   set.dir <- set.dir.vec[[set.dir.i]]
@@ -147,6 +110,43 @@ for(set.dir.i in seq_along(set.dir.vec)){
     fwrite(pred.dt, predictions.csv)
   }
   trafotree0.95.predictions[[set.name]] <- list(
+    predictions=pred.dt)
+}
+
+trafotree.predictions <- list()
+for(set.dir.i in seq_along(set.dir.vec)){
+  set.dir <- set.dir.vec[[set.dir.i]]
+  set.name <- basename(set.dir)
+  out.dir <- file.path("predictions", "trafotree", set.name)
+  predictions.csv <- file.path(out.dir, "predictions.csv")
+  if(file.exists(predictions.csv)){
+    pred.dt <- fread(predictions.csv)
+  }else{
+    features <- fread(file.path(set.dir, "features.csv"))
+    targets <- fread(file.path(set.dir, "targets.csv"))
+    folds <- fread(file.path(set.dir, "folds.csv"))
+    feature.mat <- as.matrix(features)
+    target.mat <- as.matrix(targets)
+    fold.vec <- sort(unique(folds$fold))
+    pred.dt <- data.table(pred.log.penalty=rep(NA_real_, nrow(features)))
+    for(test.fold in fold.vec){
+      cat(sprintf(
+        "%4d / %4d %s test fold=%d\n",
+        set.dir.i, length(set.dir.vec),
+        set.name, test.fold))
+      is.test <- folds$fold == test.fold
+      is.train <- !is.test
+      set.seed(1)
+      fit <- trafotreeCV(
+        feature.mat[is.train,], target.mat[is.train,])
+      pred.dt[is.test, pred.log.penalty := {
+        trafotreePredict(fit, feature.mat[is.test, ])
+      }]
+    }
+    dir.create(out.dir, showWarnings=TRUE, recursive=TRUE)
+    fwrite(pred.dt, predictions.csv)
+  }
+  trafotree.predictions[[set.name]] <- list(
     predictions=pred.dt)
 }
 
