@@ -71,6 +71,8 @@ gg.panels <- ggplot()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(set.name ~ variable, scales="free")
 
+"H3K36me3_TDH_other_FPOP" #trafotree does a little better.
+
 stats.wide <- dcast(
   evaluate.predictions,
   set.name + fold ~ model.name,
@@ -108,7 +110,7 @@ auc.wide <- dcast(
 auc.tall <- melt(
   auc.wide,
   id.vars=c("set.name", "fold", "IntervalRegressionCV"),
-  measure.vars=c("mmit.linear.hinge", "mmit.squared.hinge"),
+  measure.vars=c("mmit.linear.hinge", "mmit.squared.hinge", "trafotree", "constant"),
   variable.name="competitor.name",
   value.name="competitor.auc")
 auc.tall[, set.fac := factor(set.name, diff.pvalues$set.name)]
@@ -123,7 +125,7 @@ gg.scatter.auc <- ggplot()+
     IntervalRegressionCV, competitor.auc, color=competitor.name),
     shape=1,
     data=auc.tall)+
-  scale_color_manual(values=algo.colors)+
+  ##scale_color_manual(values=algo.colors)+
   scale_x_continuous(
     "Test AUC for regularized linear model",
     breaks=break.vec,
