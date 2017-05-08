@@ -44,10 +44,12 @@ break.points <- data.table(cost=0, rbind(
   data.table(pred=2, step=step(3)),
   data.table(pred=3, step=step(1:3))))
 pointers <- data.table(
-  pred=c(4, 3, 3),
+  pred=c(3, 3, 3),
+  pred.to=c(Inf, 3, 3),
   cost.from=1.5,
-  cost.to=c(1, 0, 0)+0.1,
-  hjust=c(1, 0.5, 0.5),
+  vjust=c(0.5, -0.5, -0.5),
+  cost.to=c(1.4, 0, 0)+0.1,
+  hjust=c(1.1, 0.5, 0.5),
   label=c("$j_1=2$", "$J_1=1$", "$j_2=J_2=2$"),
   step=step(1:3))
 break.labels <- rbind(data.table(
@@ -110,12 +112,6 @@ gg <- ggplot()+
     data=ab.lines,
     color="grey",
     size=3)+
-  geom_segment(aes(
-    pred, cost.from,
-    xend=pred, yend=cost.to),
-    color="blue",
-    arrow=grid::arrow(type="closed", length=grid::unit(0.15, "lines")),
-    data=pointers)+
   geom_label(aes(
     pred, cost, label=label, hjust=hjust),
     size=lab.size,
@@ -130,8 +126,7 @@ gg <- ggplot()+
     size=lab.size,
     data=line.labels)+
   geom_text(aes(
-    pred, cost.from, label=label, hjust=hjust),
-    vjust=-0.5,
+    pred, cost.from, label=label, hjust=hjust, vjust=vjust),
     size=lab.size,
     color="blue",
     data=pointers)+
@@ -140,6 +135,12 @@ gg <- ggplot()+
     size=1,
     color="red",
     data=cost.lines)+
+  geom_segment(aes(
+    pred, cost.from,
+    xend=pred.to, yend=cost.to),
+    color="blue",
+    arrow=grid::arrow(type="closed", length=grid::unit(0.15, "lines")),
+    data=pointers)+
   geom_point(aes(
     pred, cost),
     shape=1,
@@ -147,6 +148,7 @@ gg <- ggplot()+
   scale_y_continuous("cost")+
   scale_x_continuous("predicted value $\\mu$")+
   coord_cartesian(xlim=c(0.9,4.1), ylim=c(-1, 1.8), expand=FALSE)
+print(gg)
 w <- 5.5
 h <- 2
 tikz("figure-algorithm-steps-standalone.tex", w, 2, standAlone=TRUE)
