@@ -3,7 +3,7 @@ source("packages.R")
 load("evaluate.predictions.RData")
 load("data.sets.RData")
 
-##dput(RColorBrewer::brewer.pal(Inf, "Set2"))
+dput(RColorBrewer::brewer.pal(Inf, "Paired"))
 algo.colors <- c(
   "#66C2A5",
   trafotree="#FC8D62",
@@ -12,6 +12,13 @@ algo.colors <- c(
   mmit.squared.hinge="#A6D854", "#FFD92F", 
   IntervalRegressionCV="#E5C494",
   constant="#B3B3B3")#grey
+algo.colors <- c(
+  trafotree="#A6CEE3", trafotree0.95="#1F78B4",
+  mmit.linear.hinge="#B2DF8A", mmit.squared.hinge="#33A02C",
+  mmit.linear.hinge.bug="#FB9A99", mmit.squared.hinge.bug="#E31A1C", 
+  IntervalRegressionCV="#FDBF6F", constant="#FF7F00",
+  "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928"
+    )
 
 data.set.sizes <- data.table(set.name=names(data.sets))[, {
   s <- data.sets[[set.name]]

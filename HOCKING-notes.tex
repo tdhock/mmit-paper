@@ -1,16 +1,82 @@
 \documentclass{article}
 
+\usepackage{natbib}
 \usepackage[cm]{fullpage}
 \usepackage{tikz}
 \usepackage{algorithm,algorithmic}
-\usepackage{amssymb,amsmath}
+\usepackage{amssymb,amsmath,amsthm}
 \newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
 \newtheorem{definition}{Definition}
 \newtheorem{example}{Example}
 \DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\minimize}{minimize}
 
 \begin{document}
+
+\section{Introduction}
+Interval regression is a class of machine learning models for which
+the predicted value is a real number, but each output in the training
+data is an interval $(\underline y_i, \overline y_i)$.  In the
+terminology of the survival analysis literature, outputs may be either
+left-censored ($-\infty=\underline y_i<\overline y_i<\infty$),
+right-censored ($-\infty<\underline y_i<\overline y_i=\infty$), or
+interval-censored ($-\infty<\underline y_i<\overline y_i<\infty$).
+There are surprisingly few existing models that are designed to learn
+from these outputs, and most are linear models. In this paper we
+explore a nonlinear decision tree model for interval regression.
+
+
+Interval regression models are useful in several
+kinds of real data sets. One example is in data sequences measured
+over space or time, with labels for presence or absence of
+changepoints in particular data subsets \citep{HOCKING-penalties}. In
+this context, learning a penalty function for predicting the number of
+changepoints is an interval regression problem where each output is an
+interval of penalty values with minimal incorrect labels.
+
+\subsection{Contributions and organization}
+
+Our first contribution is Section~\ref{sec:model}, in which we propose
+a new nonlinear decision tree model for the interval regression
+problem. We propose to choose splits in the tree model using a
+margin-based hinge loss, which yields sequence of $n-1$ related convex
+optimization problems for each feature. Our second contribution is
+Section~\ref{sec:algorithm}, in which we propose a dynamic programming
+algorithm that computes the optimal solution to all $n-1$ problems in
+$O(n\log n)$ time. In Section~\ref{sec:results} we show that our
+algorithm achieves state-of-the-art prediction accuracy in several
+real and simulated data sets. In Section~\ref{sec:discussion} we
+discuss the significance of our contributions, and in
+Section~\ref{sec:conclusions} we propose possible future research
+directions.
+
+\section{Related work}
+
+A related problem is linear models for censored outputs, which has
+been extensively studied in the survival data analysis literature
+\citep{Wei1992}, under the name ``accelerated failure time models.''
+A distribution such as the logistic is assumed for the output value,
+and the cumulative distribution function replaces the density in the
+maximum likelihood inference problem \citep{log-logistic}. For
+unregularized models with few features, second-order optimization
+methods are typically used. 
+
+L1-regularized accelerated failure time models have recently been
+proposed in order to perform automatic feature selection in high
+dimensional data \citep{cai-regularized-aft,
+  huang-regularized-aft}. First-order optimization methods are
+typically used. 
+
+Nonlinear survival models are a relatively new research area,
+including models such as Support Vector Machines \citep{kssvm} and
+random forests \citep{survival-ensembles}. However, most models are
+limited to the case of right-censored and un-censored outputs. In
+contrast, in the interval regression setting that we consider, there
+are no un-censored outputs. The only existing nonlinear model for this
+setting is the recently proposed transformation forest of
+\citet{transformation-forests}.
 
 \section{Problem}
 Let $y_1,\dots,y_n\in\mathbb R$ and $s_1,\dots,s_n\in\{-1,1\}$ be the
@@ -146,7 +212,8 @@ $i\in\{1,\dots,t\}$.
 The total hinge loss is a piecewise quadratic function with $t$
 breakpoints $\underline C_t(\mu)=P_{J_t,M_t,B_t}(\mu)$, where
 $B_t,J_t,M_t$ can be recursively computed using the following dynamic
-programming update rules. The initialization is
+programming update rules (this is a claim which needs proof). The
+initialization is
 \begin{equation}
   \label{eq:init}
   B_0=\{\},\, J_0=1,\, M_0(\mu)=0
@@ -184,8 +251,8 @@ cost function is convex, we need only move the pointer to the left or
 the right until we find the global minimum:
 \begin{equation}
   \label{eq:J_t}
-  J_t = \argmin_{i\in\{1,\dots, t+1\}}
-  \min_{\mu\in(b_{t,i-1},b_{t,i}]} c_{t,i}(\mu)
+  J_t = \argmax_{i\in\{1,\dots,t+1\}}
+  |(b_{t,t-1}, b_{t,i}]\cap \argmin_{\mu\in\mathbb R}\underline C_t(\mu)|
 \end{equation}
 The cost after optimization is $M_t\in\mathcal F$, and it is updated every time
 the pointer is moved, by adding or subtracting an $f_{t,i}$ function
@@ -199,11 +266,137 @@ the pointer is moved, by adding or subtracting an $f_{t,i}$ function
     -\sum_{i=J_t}^{j_t-1} f_{t,i}(\mu) & \text{ if } J_t < j_t
   \end{cases}
 \end{equation}
-Finally, the optimization problem can be solved using
-$\min_\mu\underline
-C_t(\mu)=\min_{\mu\in(b_{t,J_t-1},b_{t,J_t}]}M_t(\mu)$.
 
-%\end{theorem}
+\subsection{Proof of optimality}
+
+We first would like to show that the cost we want to minimize
+$\underline C_t(\mu)$ at time $t$ can be written in terms of the cost
+functions $c_{t,i}(\mu)$ on each interval $i\in\{1,\dots, t+1\}$
+between breakpoints.
+
+\begin{definition}
+  We define the cost at time $t$ on interval $i$ as
+  \label{def:cti}
+  \begin{equation*}
+    c_{t,i}(\mu)=\sum_{j=1}^t
+    \ell[s_j(\mu-y_j)-\epsilon]
+    I[(s_j=-1\cap b_{t,i-1}<y_j+\epsilon)\cup(s_j=1\cap y_j-\epsilon<b_{t,i})]
+  \end{equation*}
+\end{definition}
+
+\begin{lemma}
+  \label{lemma:cost-intervals}
+  The cost up to data point $t$ can be written in terms of the cost on each interval:
+$$
+\underline C_t(\mu) = \sum_{i=1}^{t+1}
+c_{t,i}(\mu) I[b_{t,i-1}\leq \mu \leq b_{t,i}].
+$$
+\end{lemma}
+
+\begin{proof}
+  First assume that at time $t$ the new breakpoint
+  $b_{t,j}=y_t-s_t\epsilon$ is $j$-th in the sequence
+  $b_{t,1}<\cdots<b_{t,j}<\cdots<b_{t,t}$. Based on update rule
+  (\ref{eq:B_t}), we can then write the breakpoints at the previous time
+  $t-1$ as
+  \begin{equation}
+    b_{t-1,i} =
+  \begin{cases}
+    b_{t,i} & \text{ for } i\in\{1,\dots,j-1\} \\
+    b_{t,i+1}&\text{ for } i\in\{j,\dots,t\}.
+  \end{cases}
+  \end{equation}
+  And we can write the breakpoints at time $t$ in terms of the previous breakpoints:
+  \begin{equation}
+      b_{t,i} =
+  \begin{cases}
+    b_{t-1,i}&\text{ for }i\in\{1,\dots,j-1\} \\
+    y_t-s_t\epsilon&\text{ for }i=j\\
+    b_{t-1,i-1}&\text{ for }i\in\{j+1,\dots,t+1\}
+  \end{cases}
+  \label{eq:recursive-b}
+  \end{equation}
+  We proceed by induction. First we prove that the equality holds for
+  $t=1$. There are two cases. For a lower limit $s_i=-1$, we have
+  \begin{eqnarray}
+\underline C_1(\mu)&=&
+\begin{cases}
+  c_{1,1}(\mu)=\ell[s_1(\mu-y_1)+\epsilon] &\text{ if }-(\mu-y_1)+\epsilon>0\Rightarrow\mu < b_{1,1}=y_1+\epsilon\\
+  c_{1,2}(\mu)=0 & \text{ otherwise}
+\end{cases}
+  \end{eqnarray}
+For an upper limit $s_i=1$, we have
+  \begin{eqnarray}
+\underline C_1(\mu)&=&
+\begin{cases}
+  c_{1,2}(\mu)=\ell[s_1(\mu-y_1)+\epsilon] &\text{ if }(\mu-y_1)+\epsilon>0\Rightarrow\mu > b_{1,1}=y_1-\epsilon\\
+  c_{1,1}(\mu)=0 & \text{ otherwise}
+\end{cases}
+  \end{eqnarray}
+  For both cases it is clear that Lemma~\ref{lemma:cost-intervals}
+  is true for $t=1$. Now we assume that it is true for $t-1$, and
+  prove that it is true for $t$. First assume that $s_t=-1$, which
+  implies from Definition~\ref{def:cti} that 
+  \begin{equation}
+    c_{t-1,i}(\mu)=
+    \begin{cases}
+      c_{t,i}(\mu)-\ell[s_t(\mu-y_t)+\epsilon] & \text{ for } i\in\{1,\dots, j-1\}\\
+      c_{t,j+1}(\mu)=c_{t,j}(\mu)-\ell[s_t(\mu-y_t)+\epsilon] & \text{ for } i=j\\
+      c_{t,i+1}(\mu) & \text{ for } i\in\{j+1, \dots, t\}.
+    \end{cases}
+  \label{eq:recursive-c}
+  \end{equation}
+and
+\begin{equation}
+  c_{t,i}(\mu)=
+  \begin{cases}
+    c_{t-1,i}(\mu)+\ell[s_t(\mu-y_t)+\epsilon] & \text{ for }i\in\{1,\dots,j\}\\
+    c_{t-1,i-1}(\mu) & \text{ for }i\in\{j+1,\dots,t+1\}.
+  \end{cases}
+\end{equation}
+We then start from the induction hypothesis at $t-1$, and derive an expression in terms of $t$:
+\begin{eqnarray}
+  \underline C_{t-1}(\mu) 
+  &=& \sum_{i=1}^{t} c_{t-1,i}(\mu)I[b_{t-1,i-1}\leq\mu\leq b_{t-1,i}]\\
+  &=& \sum_{i=1}^{j-1} c_{t-1,i}(\mu)I[b_{t-1,i-1}\leq \mu\leq b_{t-1,i}]+\nonumber\\
+      &&c_{t-1,j}(\mu)I[b_{t-1,j-1}\leq\mu\leq b_{t-1,j}] +\nonumber\\
+      &&\sum_{i=j+1}^{t} c_{t-1,i}(\mu)I[b_{t-1,i-1}\leq \mu\leq b_{t-1,i}]\label{eq:separate}\\
+  &=& \sum_{i=1}^{j-1} \big(c_{t,i}(\mu)-\ell[s_t(\mu-y_t)+\epsilon]\big)I[b_{t,i-1}\leq\mu\leq b_{t,i}]+\nonumber\\
+      &&\big(c_{t,j}(\mu)-\ell[s_t(\mu-y_t)+\epsilon]\big)I[b_{t,j-1}\leq\mu\leq b_{t,j}] +\nonumber\\
+      &&c_{t,j+1}(\mu)I[b_{t,j}\leq\mu\leq b_{t,j+1}] +\nonumber\\
+      &&\sum_{i=j+1}^{t} c_{t,i+1}(\mu)I[b_{t,i}\leq\mu\leq b_{t,i+1}]\label{eq:recursive-c-b}\\
+  &=& \sum_{i=1}^{j} \big(c_{t,i}(\mu)-\ell[s_t(\mu-y_t)+\epsilon]\big)I[b_{t,i-1}\leq\mu\leq b_{t,i}]+\nonumber\\
+      &&\sum_{i=j}^{t} c_{t,i+1}(\mu)I[b_{t,i}\leq \mu\leq b_{t,i+1}]
+\end{eqnarray}
+Equation (\ref{eq:separate}) results from taking the $j$ term out of
+the sum, and (\ref{eq:recursive-c-b}) results from applying recursive
+formulas for $c_{t,i}$ (\ref{eq:recursive-c}) and $b_{t,i}$
+(\ref{eq:recursive-b}). We then can prove the equality for $t$:
+\begin{eqnarray}
+\underline C_t(\mu)
+&=& \sum_{i=1}^t \phi[s_i(\mu-y_i)+\epsilon]\\
+&=& \phi[s_t(\mu-y_t)+\epsilon] + \underline C_{t-1}(\mu)\\
+&=& \ell[s_t(\mu-y_t)+\epsilon] I[\mu<y_t+\epsilon]+\underline C_{t-1}(\mu)\\
+&=& \ell[s_t(\mu-y_t)+\epsilon] I[\mu<b_{t,j}]+\nonumber\\
+ &&\sum_{i=1}^{j} \big(c_{t,i}(\mu)-\ell[s_t(\mu-y_t)+\epsilon]\big)I[b_{t,i-1}\leq\mu\leq b_{t,i}]+\nonumber\\
+      &&\sum_{i=j}^{t} c_{t,i+1}(\mu)I[b_{t,i}\leq \mu\leq b_{t,i+1}]\\
+ &=&\sum_{i=1}^{j} c_{t,i}(\mu)I[b_{t,i-1}\leq\mu\leq b_{t,i}]+\nonumber\\
+      &&\sum_{i=j}^{t} c_{t,i+1}(\mu)I[b_{t,i}\leq \mu\leq b_{t,i+1}]\\
+ &=&\sum_{i=1}^{t+1} c_{t,i}(\mu)I[b_{t,i-1}\leq\mu\leq b_{t,i}].
+\end{eqnarray}
+This concludes the proof of Lemma~\ref{lemma:cost-intervals} for the
+case of $s_t=-1$, and the case for $s_t=1$ is analogous.
+\end{proof}
+
+\begin{theorem}
+  The optimization problem can be solved using
+  $\min_\mu\underline
+  C_t(\mu)=\min_{\mu\in(b_{t,J_t-1},b_{t,J_t}]}M_t(\mu)$.
+\end{theorem}
+
+\begin{proof}
+  TODO
+\end{proof}
 
 \subsection{Implementation details and complexity analysis}
 
@@ -292,6 +485,8 @@ $B\gets\text{map}\{\},\ J\gets B.\text{end}(),\ M\gets\text{Coefs(0)}$
 \end{algorithmic}
 \end{algorithm}
 
+\bibliographystyle{natbib}
+\bibliography{refs}
 
 \end{document}
 

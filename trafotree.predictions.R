@@ -1,6 +1,7 @@
 source("packages.R")
 library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
 ## more recent: svn up -r 734 && R CMD INSTALL basefun mlt trtf
+
 trafotreeNormal <- function(X, y, ...){
   finite.targets <- data.frame(log.penalty=y[is.finite(y)])
   m <- ctm(as.basis(~log.penalty, data=finite.targets), todistr="Normal")
@@ -75,6 +76,7 @@ trafotreeCV <- function
     feature.mat, target.mat, mincriterion=best.validation$mc)
 }
 
+options(warn=2)
 set.dir.vec <- Sys.glob(file.path("data", "*"))
 trafotree0.95.predictions <- list()
 for(set.dir.i in seq_along(set.dir.vec)){
