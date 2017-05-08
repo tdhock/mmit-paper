@@ -54,7 +54,7 @@ def find_datasets(path):
             yield Dataset(abspath(join(path, d)))
 
 
-def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True, n_cpu=-1):
+def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True, n_margin_values=10, n_cpu=-1):
     ds_result_dir = join(result_dir, d.name)
     if not exists(ds_result_dir):
         mkdir(ds_result_dir)
@@ -74,6 +74,16 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True, n_cpu=-
             y_train = d.y[fold_train]
             X_test = d.X[~fold_train]
             y_test = d.y[~fold_train]
+
+            # Determine the margin grid
+            sorted_limits = y_train.flatten()
+            sorted_limits = sorted_limits[~np.isinf(sorted_limits)]
+            sorted_limits.sort()
+            range_max = sorted_limits.max() - sorted_limits.min()
+            range_min = np.diff(sorted_limits)
+            range_min = range_min[range_min > 0].min()
+            parameters = dict(parameters)  # Make a copy
+            parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values)
 
             cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=parameters, cv=10, n_jobs=n_cpu,
                               scoring=metric, pruning=pruning)
@@ -130,14 +140,13 @@ if __name__ == "__main__":
         print(method)
 
         # Determine the values of the HPs based on the learning algorithm
-        params = {"margin": np.hstack(([0.], np.logspace(-6, 2, 15))),
-                  "loss": ["hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
+        params = {"loss": ["hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
         if "pruning" in method:
-            params.update({"max_depth": [10000000], "min_samples_split": [0]})
+            params.update({"max_depth": [10000000], "min_samples_split": [2]})
             pruning = True
         else:
             params.update({"max_depth": [1, 2, 3, 5, 7, 10, 20, 50, 100, 200, 500, 1000],
-                           "min_samples_split": [0, 5, 10, 20]})
+                           "min_samples_split": [2, 5, 10, 30, 50, 100, 300, 500]})
             pruning = False
 
         # Prepare the results directory
@@ -148,7 +157,7 @@ if __name__ == "__main__":
         for i, d in enumerate(datasets):
             print("....{0:d}/{1:d}: {2!s}".format(i, len(datasets), d.name))
             try:
-                evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_cpu)
+                evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_margin_values=15, n_cpu=n_cpu)
             except:
                 failed.append((method, d.name))
 
