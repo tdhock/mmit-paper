@@ -30,7 +30,13 @@ figure.simulated.functions.pdf: figure.simulated.functions.py
 	python $<
 downloaded.datasets: downloaded.datasets.py 
 	python $<
-figure.mmit.margins: figure.mmit.margins.py ./predictions/mmit*/*/parameters.json
+figure.mmit.margins.pgf: figure.mmit.margins.py ./predictions/mmit*/*/parameters.json
 	python $<
 cart.predictions: cart.predictions.py ./data/*/targets.csv
+	python $<
+figure.cart.vs.mmit.pgf: figure.cart.vs.mmit.py ./predictions/mmit*/*/parameters.json
+	python $<
+figure.leaf.split: figure.leaf.split.py
+	python $<
+figure.cart.hps: figure.cart.hps.py ./predictions/cart/*/parameters.pkl
 	python $<

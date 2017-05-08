@@ -15,7 +15,7 @@ def load_parameters_by_method(predictions_path):
     dataset_params_by_method = defaultdict(lambda: {})
     print "Loading parameters..."
     for method in listdir(predictions_path):
-        if isdir(join(predictions_path, method)) and "mmit" in method:
+        if isdir(join(predictions_path, method)) and "mmit" in method and "pruning" not in method:  # XXX: Temporary remove pruning
             print "\t", method
             for dataset in listdir(join(predictions_path, method)):
                 print "\t\t", dataset
@@ -47,8 +47,8 @@ if __name__ == "__main__":
             method_is_plotted[method] = True
     plt.axhline(np.log10(clip_to_min), linestyle="--", color="red", label="Zero value")
 
-    for m in np.logspace(-6, 2, 15):
-        plt.axhline(np.log10(m), linestyle="--", color="grey", alpha=0.3)
+    for m in np.logspace(-3, 2, 35):
+        plt.axhline(np.log10(m), dashes=(1, 1, 1, 1), color="grey", alpha=0.3)
 
     plt.xlim([-1, len(dataset_names)])
     plt.xticks(np.arange(len(dataset_names)), dataset_names, rotation=90)
