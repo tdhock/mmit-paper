@@ -1,3 +1,7 @@
+figure-moves.png: figure-moves.R moves.RData
+	R --no-save < $<
+moves.RData: moves.R
+	R --no-save < $<
 HOCKING-notes.pdf: HOCKING-notes.tex figure-algorithm-steps.tex
 	pdflatex HOCKING-notes
 figure-algorithm-steps.tex: figure-algorithm-steps.R
