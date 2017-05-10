@@ -14,10 +14,10 @@ algo.colors <- c(
   constant="#B3B3B3")#grey
 algo.colors <- c(
   trafotree="#A6CEE3", trafotree0.95="#1F78B4",
-  mmit.linear.hinge="#B2DF8A", mmit.squared.hinge="#33A02C",
-  mmit.linear.hinge.bug="#FB9A99", mmit.squared.hinge.bug="#E31A1C", 
-  IntervalRegressionCV="#FDBF6F", constant="#FF7F00",
-  "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928"
+  mmit.linear.hinge="#B2DF8A", mmit.linear.hinge.pruning="#33A02C",
+  mmit.squared.hinge="#FB9A99", mmit.squared.hinge.pruning="#E31A1C", 
+  IntervalRegressionCV="#FDBF6F", "#FF7F00",
+  constant="#CAB2D6", cart="#6A3D9A", "#FFFF99", "#B15928"
     )
 
 data.set.sizes <- data.table(set.name=names(data.sets))[, {
@@ -36,11 +36,11 @@ data.set.sizes[, percent.upper := 100*upper.limits/(upper.limits+lower.limits)]
 
 evaluate.predictions[, accuracy.percent := 100 - error.percent]
 min.nonzero <- evaluate.predictions[mean.squared.error!=0, min(mean.squared.error)]
-evaluate.predictions[, log10.mean.squared.error := log10(mean.squared.error+min.nonzero)]
+evaluate.predictions[, `-log10.mean.squared.error` := -log10(mean.squared.error+min.nonzero)]
 evaluate.tall <- melt(
   evaluate.predictions[model.name!="iregnet"],
   id.vars=c("fold", "set.name", "model.name"),
-  measure.vars=c("auc", "accuracy.percent", "log10.mean.squared.error"))
+  measure.vars=c("auc", "accuracy.percent", "-log10.mean.squared.error"))
 mean.dt <- evaluate.tall[, list(
   mean=mean(value),
   sd=sd(value)
@@ -88,7 +88,7 @@ stats.wide <- dcast(
 diff.pvalues <- stats.wide[, {
   L <- t.test(auc_mmit.squared.hinge, auc_IntervalRegressionCV, paired=TRUE)
   with(L, data.table(
-    p.value,
+    p.value=ifelse(is.finite(p.value), p.value, 1),
     estimate
   ))
 }, by=set.name][order(p.value),]
@@ -97,7 +97,7 @@ break.vec <- seq(0.6, 1, by=0.2)
 gg.scatter.auc <- ggplot()+
   ggtitle("MMIT with squared hinge loss does not improve AUC with respect to regularized linear model")+
   theme_bw()+
-  facet_wrap("set.fac", ncol=8)+
+  facet_wrap("set.fac", ncol=15)+
   theme(panel.margin=grid::unit(0, "lines"))+
   geom_abline(slope=1,intercept=0,color="grey")+
   coord_equal()+
@@ -109,6 +109,130 @@ gg.scatter.auc <- ggplot()+
     breaks=break.vec,
     labels=paste(break.vec))
 print(gg.scatter.auc)
+
+## Candidates:
+mse.wide <- dcast(
+  evaluate.predictions,
+  set.name + fold ~ model.name,
+  value.var=c("mean.squared.error"))
+mse.tall <- melt(
+  mse.wide,
+  id.vars=c("set.name", "fold", "constant"),
+  value.name="mean.squared.error",
+  variable.name="model.name")
+mse.tall[, diff.log.mse := log(constant)-log(mean.squared.error)]
+show.data.vec <- c(
+  "simulated.abs"="simulated\nabs",
+  "simulated.sin"="simulated\nsin",
+  "simulated.linear"="simulated\nlinear",
+  "servo"="UCI\nservo",
+  ##"meta",
+  ##"wisconsin",
+  "H3K27ac-H3K4me3_TDHAM_BP_FPOP"="changepoint\nhistone",
+  ##"H3K4me3_TDH_other_PDPA",
+  ##"H3K36me3_AM_immune_FPOP",
+  "neuroblastomaProcessed"="changepoint\nneuroblastoma")
+evaluate.predictions[, set.fac := factor(set.name, names(rev(show.data.vec)), rev(show.data.vec))]
+show.model.vec <- c(
+  MMIT.squared.hinge="mmit.squared.hinge",
+  L1regLinear="IntervalRegressionCV",
+  CART="cart",
+  TransformationTree="trafotree",
+  constant="constant")
+show.tall <- mse.tall[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
+show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
+
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ set.name, scales="free")+
+  geom_point(aes(
+    diff.log.mse, model.fac),
+    data=show.tall)
+
+mse.show.tall <- evaluate.predictions[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
+mse.show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
+
+mse.show.tall[, log10.mse := log10(mean.squared.error)]
+mse.show.stats <- mse.show.tall[, list(
+  median=median(log10.mse),
+  mean=mean(log10.mse),
+  sd=sd(log10.mse),
+  q25=quantile(log10.mse, 0.25),
+  q75=quantile(log10.mse, 0.75)
+), by=list(set.fac, model.fac)]
+
+mse.show.best <- mse.show.stats[, list(
+  min.mean=min(mean)
+  ), by=list(set.fac)]
+gg.folds <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ set.fac, scales="free")+
+  geom_vline(aes(
+    xintercept=min.mean),
+    data=mse.show.best,
+    color="grey")+
+  geom_point(aes(
+    log10(mean.squared.error), model.fac),
+    shape=1,
+    data=mse.show.tall)+
+  ylab("model")+
+  geom_blank(aes(
+    log10.mse, model.fac),
+    data=data.table(
+      log10.mse=c(-2.5, 0.5),
+      set.fac=factor("UCI\nservo", rev(show.data.vec)),
+      model.fac=factor("CART", rev(names(show.model.vec)))))+
+  xlab("log10(mean squared test error) in 5-fold CV, one point per fold")
+print(gg.folds)
+pdf("figure-evaluate-predictions-folds.pdf", 8, 1.8)
+print(gg.folds)
+dev.off()
+
+ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ set.fac, scales="free")+
+  geom_segment(aes(
+    q25, model.fac,
+    xend=q75, yend=model.fac),
+    data=mse.show.stats)+
+  geom_point(aes(
+    median, model.fac),
+    shape=1,
+    size=3,
+    data=mse.show.stats)
+
+gg.mean <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ set.fac, scales="free")+
+  geom_vline(aes(
+    xintercept=min.mean),
+    data=mse.show.best,
+    color="grey")+
+  geom_segment(aes(
+    mean-sd, model.fac,
+    xend=mean+sd, yend=model.fac),
+    data=mse.show.stats)+
+  geom_point(aes(
+    mean, model.fac),
+    shape=1,
+    size=3,
+    data=mse.show.stats)+
+  ylab("model")+
+  geom_blank(aes(
+    log10.mse, model.fac),
+    data=data.table(
+      log10.mse=c(-2.5, 0.5),
+      set.fac=factor("UCI\nservo", rev(show.data.vec)),
+      model.fac=factor("CART", rev(names(show.model.vec)))))+
+  xlab("log10(mean squared test error), mean +/- sd over 5 test folds")
+print(gg.mean)
+pdf("figure-evaluate-predictions-mean.pdf", 8, 1.8)
+print(gg.mean)
+dev.off()
 
 auc.wide <- dcast(
   evaluate.predictions,
@@ -220,7 +344,7 @@ viz <- list(
     type=c(),
     model.name=c("constant", "mmit.squared.hinge")),
   dots=gg.colors+
-    theme_animint(width=1000))
+    theme_animint(height=1000, width=1000))
 animint2dir(viz, "figure-evaluate-predictions")
 
 png("figure-evaluate-predictions.png", 16, 9, units="in", res=100)
