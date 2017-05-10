@@ -66,6 +66,10 @@ y <- function(yvar){
   factor(yvar, c("max", "average"))
 }
 gg <- ggplot()+
+  ggtitle(paste(
+    "max and average pointer moves over all",
+    "data sets, features, and margin parameters",
+    sep="\n"))+
   theme_bw()+
   facet_wrap("y", scales="free")+
   scale_x_log10("number of outputs (finite interval limits)")+
@@ -123,7 +127,7 @@ gg <- ggplot()+
     moves=c(0, 1, 0, 10),
     y=y(c("average", "average", "max", "max"))))
 print(gg)
-pdf("figure-moves.pdf", 4, 3)
+pdf("figure-moves.pdf", 4.5, 3)
 print(gg)
 dev.off()
 
