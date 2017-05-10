@@ -9,7 +9,9 @@ for(set.i in seq_along(data.dir.vec)){
   for(file.i in seq_along(csv.file.vec)){
     csv.file <- csv.file.vec[[file.i]]
     data.type <- sub("[.]csv$", "", basename(csv.file))
-    data.sets[[set.name]][[data.type]] <- as.matrix(fread(csv.file))
+    mat <- as.matrix(fread(paste("sed 's/inf/Inf/'", shQuote(csv.file))))
+    stopifnot(is.numeric(mat))
+    data.sets[[set.name]][[data.type]] <- mat
   }
 }
 

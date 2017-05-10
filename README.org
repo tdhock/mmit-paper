@@ -12,6 +12,10 @@ Max margin interval trees
   set, then plot test accuracy versus number of labeled segmentation
   problems.
 
+
+** 10 May 2017
+Lots more algos and data sets, prediction accuracy figure
+http://bl.ocks.org/tdhock/raw/75751a85d2766cd43be4c36ee3fa58a1/
 ** 31 Mar 2017
 
 Created a new filter when making data sets (observations must be
