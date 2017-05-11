@@ -62,13 +62,26 @@ def save_predictions(estimator, method, dataset, predictions_path):
 if __name__ == "__main__":
     predictions_path = "./predictions"
     n_cpu = 4
-    param_template = {"max_depth": [1000], "min_samples_split": [0], "margin": [0.] + np.logspace(-4, 1, 5).tolist()}
+    n_margin_values = 15
+    param_template = {"max_depth": [10000],
+                      "min_samples_split": [2]}
 
     datasets = list(find_datasets("./data"))
     datasets = [d for d in datasets if "simulated." in d.name]
 
     for i, d in enumerate(datasets):
         print "{0:d}/{1:d}: {2!s}".format(i + 1, len(datasets), d.name)
+
+        # Determine the margin grid
+        sorted_limits = d.y.flatten()
+        sorted_limits = sorted_limits[~np.isinf(sorted_limits)]
+        sorted_limits.sort()
+        range_max = sorted_limits.max() - sorted_limits.min()
+        range_min = np.diff(sorted_limits)
+        range_min = range_min[range_min > 0].min()
+        param_template["margin"] = [0.] + np.logspace(np.log10(range_min),
+                                                      np.log10(range_max),
+                                                      n_margin_values).tolist()
 
         print ".... linear hinge"
         method = "mmit.linear.hinge.pruning"
@@ -80,8 +93,8 @@ if __name__ == "__main__":
                 mkdir(join(predictions_path, method, d.name))
             except:
                 pass
-            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params, cv=10, n_jobs=n_cpu, scoring=mse_scorer,
-                              pruning=True).fit(d.X, d.y)
+            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params, cv=10, n_jobs=n_cpu,
+                              scoring=mse_scorer, pruning=True).fit(d.X, d.y)
             save_predictions(cv.best_estimator_, method, d, predictions_path)
 
         print ".... squared hinge"
