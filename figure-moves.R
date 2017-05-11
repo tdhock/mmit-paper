@@ -97,23 +97,23 @@ gg <- ggplot()+
   ##   alpha=0.5)+
   geom_line(aes(
     total.finite, median.moves,
-    color=loss),
+    color=hinge.loss),
     size=1,
     data=data.table(dmoves, y=y("average")))+
   geom_ribbon(aes(
     total.finite,
-    fill=loss,
+    fill=hinge.loss,
     ymin=q25.moves, ymax=q75.moves),
     data=data.table(dmoves, y=y("average")),
     alpha=0.5)+
   geom_line(aes(
     total.finite, median.max,
-    color=loss),
+    color=hinge.loss),
     size=1,
     data=data.table(dmoves, y=y("max")))+
   geom_ribbon(aes(
     total.finite,
-    fill=loss,
+    fill=hinge.loss,
     ymin=q25.max, ymax=q75.max),
     data=data.table(dmoves, y=y("max")),
     alpha=0.5)+
