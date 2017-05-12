@@ -2,7 +2,9 @@ source("packages.R")
 
 targets.csv.vec <- Sys.glob(file.path("data", "*", "targets.csv"))
 moves.list <- list()
-for(data.i in seq_along(targets.csv.vec)){
+tseq <- seq_along(targets.csv.vec)
+##tseq <- 1
+for(data.i in tseq){
   targets.csv <- targets.csv.vec[[data.i]]
   targets.dt <- fread(paste("sed 's/inf/Inf/'", shQuote(targets.csv)))
   data.dir <- dirname(targets.csv)
@@ -29,6 +31,7 @@ for(data.i in seq_along(targets.csv.vec)){
       log(max(finite.vec)-min(finite.vec)),
       l=10))
     for(feature.name in names(features.dt)){
+      print(feature.name)
       for(direction in c("increasing", "decreasing")){
         ord.vec <- order(
           features.dt[[feature.name]],
@@ -36,13 +39,16 @@ for(data.i in seq_along(targets.csv.vec)){
         ord.mat <- target.mat[ord.vec, ]
         for(margin in margin.vec){
           for(loss in c("hinge", "square")){
-            result.df <- mmit::compute_optimal_costs(target.mat, margin, loss)
+            time.df <- microbenchmark({
+              result.df <- mmit::compute_optimal_costs(ord.mat, margin, loss)
+            }, times=1)
             moves.per.limit <- result.df$moves / n.finite
             data.moves.list[[paste(
               data.name, feature.name,
               direction, margin, loss)]] <- data.table(
                 data.name, feature.name,
                 direction, margin, loss,
+                seconds=time.df$time/1e9,
                 observations=nrow(target.mat),
                 max.moves=max(result.df$moves),
                 max.moves.per.limit=max(moves.per.limit),
