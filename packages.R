@@ -70,7 +70,7 @@ works_with_R(
   future="1.4.0",
   survival=c("2.41.2", "2.41.3"),#this version is important! otherwise trtf wont work!
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",  # This needs to be before penaltyLearning
-  "tdhock/penaltyLearning@1c36935f2984541e793b9d8de27c3060fd208a41",
+  "tdhock/penaltyLearning@1bb8446e5e37903ee2ba05d76267cc0a08f9d002",
   "anujkhare/iregnet@93729931a69f896dd752f5065c0d2e8859ed161f",
   "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
   "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
