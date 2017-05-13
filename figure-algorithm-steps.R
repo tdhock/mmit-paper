@@ -71,31 +71,30 @@ break.labels <- rbind(data.table(
 cost.labels <- data.table(
   cost=c(-0.2, 0.3),
   pred=c(1, 1),
-  label=paste0("$\\underline C_", 1:2, "(\\mu)$"),
+  label=paste0("$P_", 1:2, "(\\mu)$"),
   step=step(c(1, 3)),
   hjust=0)
 line.labels <- rbind(data.table(
   pred=c(2, 3.9),
   hjust=c(0.5, 1),
   cost=c(0.2, 1.05),
-  label=c("$c_{1,1}(\\mu)$", "$m_1(\\mu)=c_{1,2}(\\mu)=\\mu-3$"),
+  label=c("$p_{1,1}(\\mu)$", "$p_{1,2}(\\mu)=\\mu-3$"),
   step=step(1)
 ), data.table(
   pred=1.9,
   hjust=0.5,
   cost=0.2,
-  label="$M_1(\\mu)=c_{1,1}(\\mu)=0$",
+  label="$M_1(\\mu)=p_{1,1}(\\mu)=0$",
   step=step(2)
 ), data.table(
-  pred=c(1.05, 2.5, 2.5, 2.5, 3.95),
-  hjust=c(0, 0.5, 0.5, 0.5, 1),
-  cost=c(1.1, 0.2, 0.45, 0.7, 1.1),
+  pred=c(1.05, 2.5, 2.5, 3.95),
+  hjust=c(0, 0.5, 0.5, 1),
+  cost=c(1.1, 0.2, 0.45, 1.1),
   label=c(
-    "$c_{2,1}(\\mu)$",
-    "$m_2(\\mu)=0$",
+    "$p_{2,1}(\\mu)$",
+    "$p_{2,2}(\\mu)$",
     "$M_2(\\mu)=$",
-    "$c_{2,2}(\\mu)=$",
-    "$c_{2,3}(\\mu)$"
+    "$p_{2,3}(\\mu)$"
   ),
   step=step(3)
 ))
@@ -145,8 +144,8 @@ gg <- ggplot()+
     pred, cost),
     shape=1,
     data=break.points)+
-  scale_y_continuous("cost")+
-  scale_x_continuous("predicted value $\\mu$")+
+  scale_y_continuous("Cost")+
+  scale_x_continuous("Predicted value ($\\mu$)")+
   coord_cartesian(xlim=c(0.9,4.1), ylim=c(-1, 1.8), expand=FALSE)
 print(gg)
 w <- 5.5

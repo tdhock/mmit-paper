@@ -78,20 +78,22 @@ gg.panels <- ggplot()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(set.name ~ variable, scales="free")
 
-"H3K36me3_TDH_other_FPOP" #trafotree does a little better.
-
 stats.wide <- dcast(
   evaluate.predictions,
   set.name + fold ~ model.name,
   value.var=c("auc", "accuracy.percent", "mean.squared.error"))
 
 diff.pvalues <- stats.wide[, {
-  L <- t.test(auc_mmit.squared.hinge, auc_IntervalRegressionCV, paired=TRUE)
+  L <- t.test(
+    mean.squared.error_mmit.linear.hinge,
+    mean.squared.error_mmit.squared.hinge,
+    alternative="less",
+    paired=TRUE)
   with(L, data.table(
     p.value=ifelse(is.finite(p.value), p.value, 1),
     estimate
   ))
-}, by=set.name][order(p.value),]
+}, by=set.name][order(p.value),][data.set.sizes, on=list(set.name)]
 stats.wide[, set.fac := factor(set.name, diff.pvalues$set.name)]
 break.vec <- seq(0.6, 1, by=0.2)
 gg.scatter.auc <- ggplot()+
@@ -102,9 +104,9 @@ gg.scatter.auc <- ggplot()+
   geom_abline(slope=1,intercept=0,color="grey")+
   coord_equal()+
   geom_point(aes(
-    auc_IntervalRegressionCV, auc_mmit.squared.hinge),
+    log10(mean.squared.error_mmit.squared.hinge), log10(mean.squared.error_mmit.linear.hinge)),
     shape=1,
-    data=stats.wide)+
+    data=stats.wide)
   scale_x_continuous(
     breaks=break.vec,
     labels=paste(break.vec))
@@ -121,23 +123,32 @@ mse.tall <- melt(
   value.name="mean.squared.error",
   variable.name="model.name")
 mse.tall[, diff.log.mse := log(constant)-log(mean.squared.error)]
-show.data.vec <- c(
+show.data.map <- c(
   "simulated.abs"="simulated\nabs",
   "simulated.sin"="simulated\nsin",
   "simulated.linear"="simulated\nlinear",
   "servo"="UCI\nservo",
+  ##cholesterol="UCI\ncholesterol",
+  triazines="UCI\ntriazines",
   ##"meta",
   ##"wisconsin",
   "H3K27ac-H3K4me3_TDHAM_BP_FPOP"="changepoint\nhistone",
   ##"H3K4me3_TDH_other_PDPA",
   ##"H3K36me3_AM_immune_FPOP",
   "neuroblastomaProcessed"="changepoint\nneuroblastoma")
+setkey(data.set.sizes, set.name)
+show.data.vec <- data.set.sizes[names(show.data.map), paste0(
+  show.data.map,
+  "\nn=", observations,
+  "\np=", features)]
+names(show.data.vec) <- names(show.data.map)
 evaluate.predictions[, set.fac := factor(set.name, names(rev(show.data.vec)), rev(show.data.vec))]
 show.model.vec <- c(
   MMIT.squared.hinge="mmit.squared.hinge",
-  L1regLinear="IntervalRegressionCV",
+  MMIT.linear.hinge="mmit.linear.hinge",
   CART="cart",
   TransformationTree="trafotree",
+  L1regLinear="IntervalRegressionCV",
   constant="constant")
 show.tall <- mse.tall[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
 show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
@@ -163,16 +174,16 @@ mse.show.stats <- mse.show.tall[, list(
 ), by=list(set.fac, model.fac)]
 
 mse.show.best <- mse.show.stats[, list(
-  min.mean=min(mean)
+  min.mean=min(median)
   ), by=list(set.fac)]
 gg.folds <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(. ~ set.fac, scales="free")+
-  geom_vline(aes(
-    xintercept=min.mean),
-    data=mse.show.best,
-    color="grey")+
+  ## geom_vline(aes(
+  ##   xintercept=min.mean),
+  ##   data=mse.show.best,
+  ##   color="grey")+
   geom_point(aes(
     log10(mean.squared.error), model.fac),
     shape=1,
@@ -182,11 +193,11 @@ gg.folds <- ggplot()+
     log10.mse, model.fac),
     data=data.table(
       log10.mse=c(-2.5, 0.5),
-      set.fac=factor("UCI\nservo", rev(show.data.vec)),
+      set.fac=factor(show.data.vec[["servo"]], rev(show.data.vec)),
       model.fac=factor("CART", rev(names(show.model.vec)))))+
   xlab("log10(mean squared test error) in 5-fold CV, one point per fold")
 print(gg.folds)
-pdf("figure-evaluate-predictions-folds.pdf", 8, 1.8)
+pdf("figure-evaluate-predictions-folds.pdf", 9, 2.2)
 print(gg.folds)
 dev.off()
 
