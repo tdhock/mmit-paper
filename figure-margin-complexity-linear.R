@@ -1,69 +1,46 @@
 source("packages.R")
 
-## This script aims to explore the accuracy of L1 regularized linear
-## models, where the regularization and margin parameters are selected
-## using different CV evaluation criteria (squared hinge loss, MSE,
-## AUC, incorrect labels). Questiond: which of these criteria selects
-## the model which yields most accurate predictions? Or are they all
-## pretty much equivalent? And do these conclusions also hold for the
-## tree model?
+load("margin.complexity.linear.RData")
 
-## Need to compute fit.list.RData first, copy from server (where it
-## took a long time to compute).
-if(!file.exists("fit.list.RData")){
-  system("scp thocking@guillimin.hpc.mcgill.ca:fit.list.RData .")
-}
+gg <- ggplot()+
+  geom_text(aes(
+    -log10(regularization),
+    log10(margin),
+    label=test.fold,
+    color=variable),
+    position="jitter",
+    data=vstats.selected)+
+  facet_grid(. ~ set.name)+
+  directlabels::geom_dl(aes(
+    -log10(regularization),
+    log10(margin),
+    color=variable,
+    label=variable),
+    data=vstats.selected,
+    method="smart.grid")+
+  guides(color="none")
+print(gg)
+pdf("figure-margin-complexity-linear-selected-parameters-scatter.pdf")
+print(gg)
+dev.off()
 
-## This is how we compute fit.list.RData on the server.
-if(FALSE){
-  library(future)
-  plan(multiprocess)
-  library(penaltyLearning)
-  data(neuroblastomaProcessed)
-  error.dt <- data.table(neuroblastomaProcessed$errors)
-  error.dt[, pid.chr := paste0(profile.id, ".", chromosome)]
-  setkey(error.dt, pid.chr)
-  n.folds <- 5
-  set.seed(1)
-  fold.vec <- sample(rep(1:n.folds, l=nrow(neuroblastomaProcessed$target.mat)))
-  ##fit.list <- list()
-  load("fit.list.RData")
-  for(test.fold in 1:n.folds){
-    if(length(fit.list) < test.fold){
-      is.test <- fold.vec == test.fold
-      is.train <- !is.test
-      train.target.mat <- neuroblastomaProcessed$target.mat[is.train, ]
-      train.feature.mat <- neuroblastomaProcessed$feature.mat[is.train, ]
-      print(test.fold)
-      set.seed(1)
-      fit.list[[test.fold]] <-  penaltyLearning::IntervalRegressionCV(
-        train.feature.mat, train.target.mat,
-        verbose=1,
-        margin.vec=c(0, 10^c(-(5:2), seq(-1, 1, by=0.2))),
-        incorrect.labels.db=error.dt)
-    }
-  }
-  save(fit.list, fold.vec, file="fit.list.RData")
-}
-
-objs <- load("fit.list.RData")
-fit <- fit.list[[1]]
-plot(fit)
-
-for(vname in unique(fit$plot.heatmap.tile$variable)){
-  cost.dt <- fit$plot.heatmap.tile[variable==vname]
-  min.dt <- cost.dt[mean==min(mean)]
+for(vname in unique(vstats$variable)){
+  cost.dt <- vstats[variable==vname]
+  min.dt <- vstats.min[variable==vname]
+  selected.dt <- vstats.selected[variable==vname]
   if(vname=="negative.auc"){
     cost.dt[, mean := mean+1]
   }
+  psize <- 2
   gg <- ggplot()+
     ggtitle(vname)+
+    facet_grid(set.name ~ test.fold)+
     geom_point(aes(
       -log10(regularization),
       log10(margin),
       fill=log10(mean)),
       shape=21,
-      size=3,
+      size=psize,
       color=NA,
       data=cost.dt)+
     geom_tile(aes(
@@ -74,13 +51,70 @@ for(vname in unique(fit$plot.heatmap.tile$variable)){
     scale_fill_gradient(low="white", high="red")+
     geom_point(aes(
       -log10(regularization),
-      log10(margin)),
-      data=min.dt,
-      size=3,
-      shape=1)
+      log10(margin),
+      shape=type),
+      data=rbind(
+        data.table(min.dt, type="min"),
+        data.table(selected.dt, type="selected")),
+      fill="black",
+      alpha=0.5,
+      size=psize)+
+    scale_shape_manual(values=c(min=1, selected=21))
+  print(gg)
   pdf(paste0("figure-margin-complexity-", vname, ".pdf"))
   print(gg)
   dev.off()
 }
 
-data(neuroblastomaProcessed)
+eval.metrics[, accuracy.percent := 100-error.percent]
+eval.tall <- melt(
+  eval.metrics,
+  measure.vars=c("auc", "accuracy.percent"),
+  variable.name="metric.name",
+  value.name="metric.value")
+eval.scatter <- dcast(
+  eval.tall,
+  variable + test.fold + metric.name ~ set.name,
+  value.var="metric.value")
+eval.scatter[, {
+  L <- t.test(dense, wide, paired=TRUE)
+  with(L, data.table(
+    p.value=ifelse(is.finite(p.value), p.value, 1),
+    estimate
+  ))
+}, by=list(variable, metric.name)]
+ggplot()+
+  facet_wrap("metric.name", scales="free")+
+  geom_abline(slope=1, intercept=0, color="white")+
+  coord_equal()+
+  geom_point(aes(
+    dense, wide, color=variable),
+    shape=1,
+    data=eval.scatter)
+
+eval.means <- eval.tall[, list(
+  mean.metric=mean(metric.value)
+), by=list(set.name, metric.name, variable)]
+auc.means <- eval.means[metric.name=="auc" & set.name=="wide"]
+levs <- auc.means[order(mean.metric), variable]
+eval.tall[, validation.metric := factor(variable, levs)]
+eval.means[, validation.metric := factor(variable, levs)]
+gg.metrics <- ggplot()+
+  ggtitle("5-fold CV test accuarcy on neuroblastoma data set")+
+  geom_point(aes(
+    mean.metric, validation.metric, color=set.name),
+    alpha=0.5,
+    size=4,
+    data=eval.means)+
+  geom_point(aes(
+    metric.value, validation.metric, color=set.name),
+    data=eval.tall,
+    shape=1)+
+  theme_bw()+
+  theme_no_space()+
+  facet_grid(. ~ metric.name, scales="free")+
+  xlab("test accuracy")
+print(gg.metrics)
+pdf("figure-margin-complexity-linear.pdf", 7, 2)
+print(gg.metrics)
+dev.off()
