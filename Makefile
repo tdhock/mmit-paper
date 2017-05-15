@@ -1,3 +1,7 @@
+figure-margin-complexity-linear.pdf: figure-margin-complexity-linear.R figure.margin.complexity.linear.RData
+	R --no-save < $<
+margin.complexity.linear.RData: margin.complexity.linear.R
+	R --no-save < $<
 figure-moves.png: figure-moves.R moves.RData
 	R --no-save < $<
 moves.RData: moves.R
