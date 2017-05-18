@@ -21,8 +21,6 @@ for(data.i in tseq){
       data.i, length(targets.csv.vec), data.name,
       nrow(features.dt), ncol(features.dt)))
     target.mat <- as.matrix(targets.dt)
-    n.finite <- rowSums(is.finite(target.mat))
-    total.finite <- sum(n.finite)
     stopifnot(is.numeric(target.mat))
     finite.vec <- sort(target.mat[is.finite(target.mat)])
     diff.vec <- diff(finite.vec)
@@ -37,18 +35,20 @@ for(data.i in tseq){
           features.dt[[feature.name]],
           decreasing=direction=="decreasing")
         ord.mat <- target.mat[ord.vec, ]
+        n.finite <- rowSums(is.finite(ord.mat))
+        total.finite <- sum(n.finite)
         for(margin in margin.vec){
           for(loss in c("hinge", "square")){
-            time.df <- microbenchmark({
+            ##time.df <- microbenchmark({
               result.df <- mmit::compute_optimal_costs(ord.mat, margin, loss)
-            }, times=1)
+            ##}, times=1)
             moves.per.limit <- result.df$moves / n.finite
             data.moves.list[[paste(
               data.name, feature.name,
               direction, margin, loss)]] <- data.table(
                 data.name, feature.name,
                 direction, margin, loss,
-                seconds=time.df$time/1e9,
+                ##seconds=time.df$time/1e9,
                 observations=nrow(target.mat),
                 max.moves=max(result.df$moves),
                 max.moves.per.limit=max(moves.per.limit),

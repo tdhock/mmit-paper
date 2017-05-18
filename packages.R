@@ -68,6 +68,7 @@ works_with_R(
   libcoin="0.9.1",
   mlt="0.1.3",
   future="1.4.0",
+  microbenchmark="1.4.2.1",
   survival=c("2.41.2", "2.41.3"),#this version is important! otherwise trtf wont work!
   "faizan-khan-iit/ggplot2@5fb99d0cece13239bbbc09c6b8a7da7f86ac58e2",  # This needs to be before penaltyLearning
   "tdhock/penaltyLearning@1bb8446e5e37903ee2ba05d76267cc0a08f9d002",
@@ -77,7 +78,7 @@ works_with_R(
 requireGitHub::requireGitHub_package(
   "aldro61",
   "mmit/Rpackage",
-  "d304d8446ca6ba9676ccaa6a4d3928fe2d7daab1",
+  "f77cc3ed9c72f55d267cdb0dd3f757fa813dad72",
   "mmit")
 registerDoParallel()
 options(

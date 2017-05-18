@@ -144,12 +144,12 @@ show.data.vec <- data.set.sizes[names(show.data.map), paste0(
 names(show.data.vec) <- names(show.data.map)
 evaluate.predictions[, set.fac := factor(set.name, names(rev(show.data.vec)), rev(show.data.vec))]
 show.model.vec <- c(
-  MMIT.squared.hinge="mmit.squared.hinge",
-  MMIT.linear.hinge="mmit.linear.hinge",
-  CART="cart",
-  TransformationTree="trafotree",
-  L1regLinear="IntervalRegressionCV",
-  constant="constant")
+  "MMIT-S"="mmit.squared.hinge",
+  "MMIT-L"="mmit.linear.hinge",
+  "Interval-CART"="cart",
+  TransfoTree="trafotree",
+  "L1-Linear"="IntervalRegressionCV",
+  Constant="constant")
 show.tall <- mse.tall[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
 show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
 
@@ -194,7 +194,7 @@ gg.folds <- ggplot()+
     data=data.table(
       log10.mse=c(-2.5, 0.5),
       set.fac=factor(show.data.vec[["servo"]], rev(show.data.vec)),
-      model.fac=factor("CART", rev(names(show.model.vec)))))+
+      model.fac=factor("Interval-CART", rev(names(show.model.vec)))))+
   xlab("log10(mean squared test error) in 5-fold CV, one point per fold")
 print(gg.folds)
 pdf("figure-evaluate-predictions-folds.pdf", 9, 2.2)
