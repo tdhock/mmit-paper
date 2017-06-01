@@ -123,10 +123,10 @@ if __name__ == "__main__":
     n_cpu = 40
 
     run_algos = [
-        "mmit.linear.hinge",
-        "mmit.linear.hinge.pruning",
-        "mmit.squared.hinge",
-        "mmit.squared.hinge.pruning"
+        "mmit.linear.hinge.raw.features",
+        "mmit.linear.hinge.pruning.raw.features",
+        "mmit.squared.hinge.raw.features",
+        "mmit.squared.hinge.pruning.raw.features"
     ]
 
     def prep_result_dir(result_dir):
