@@ -49,3 +49,7 @@ figure.leaf.split: figure.leaf.split.py
 	python $<
 figure.cart.hps: figure.cart.hps.py ./predictions/cart/*/parameters.pkl
 	python $<
+penaltyLearning.raw.features.predictions.RData: penaltyLearning.raw.features.predictions.R
+	R --no-save < $<
+mmit.raw.features.predictions: mmit.raw.features.predictions.py
+	python $<
