@@ -151,7 +151,7 @@ if __name__ == "__main__":
         print(method)
 
         # Determine the values of the HPs based on the learning algorithm
-        params = {"loss": ["hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
+        params = {"loss": ["linear_hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
         if "pruning" in method:
             params.update({"max_depth": [10000000], "min_samples_split": [2]})
             pruning = True
