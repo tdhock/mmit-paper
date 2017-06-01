@@ -50,6 +50,7 @@ def keep_only_raw_features(dataset):
     is_raw = [not("log." in name or "log+" in name) for name in dataset.feature_names]
     dataset.feature_names = dataset.feature_names[is_raw]
     dataset.X = dataset.X[:, is_raw]
+    return dataset
 
 
 def find_datasets(path):
