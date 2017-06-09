@@ -15,9 +15,10 @@ trafo.bad.gg <- ggplot()+
   geom_point(aes(
     value, model.name),
     data=trafo.bad.tall,
-    shape=1)
+    shape=1)+
+  xlab("")
 print(trafo.bad.gg)
-pdf("figure-evaluate-predictions-H3K27ac-H3K4me3_TDHAM_BP_FPOP.pdf")
+pdf("figure-evaluate-predictions-H3K27ac-H3K4me3_TDHAM_BP_FPOP.pdf", 8, 2)
 print(trafo.bad.gg)
 dev.off()
 
@@ -221,7 +222,7 @@ gg.folds <- ggplot()+
       model.fac=factor("Interval-CART", rev(names(show.model.vec)))))+
   xlab("log10(mean squared test error) in 5-fold CV, one point per fold")
 print(gg.folds)
-pdf("figure-evaluate-predictions-folds.pdf", 9, 2.2)
+pdf("figure-evaluate-predictions-folds.pdf", 9, 3)
 print(gg.folds)
 dev.off()
 
