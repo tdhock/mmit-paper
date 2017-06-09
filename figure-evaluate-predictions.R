@@ -3,6 +3,24 @@ source("packages.R")
 load("evaluate.predictions.RData")
 load("data.sets.RData")
 
+evaluate.predictions[, accuracy.percent := 100 - error.percent]
+min.nonzero <- evaluate.predictions[mean.squared.error!=0, min(mean.squared.error)]
+evaluate.predictions[, `-log10.mean.squared.error` := -log10(mean.squared.error+min.nonzero)]
+trafo.bad.wide <- evaluate.predictions[set.name=="H3K27ac-H3K4me3_TDHAM_BP_FPOP"]
+trafo.bad.tall <- melt(trafo.bad.wide, measure.vars=c("auc", "accuracy.percent", "-log10.mean.squared.error"))
+trafo.bad.gg <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ variable, scales="free")+
+  geom_point(aes(
+    value, model.name),
+    data=trafo.bad.tall,
+    shape=1)
+print(trafo.bad.gg)
+pdf("figure-evaluate-predictions-H3K27ac-H3K4me3_TDHAM_BP_FPOP.pdf")
+print(trafo.bad.gg)
+dev.off()
+
 dput(RColorBrewer::brewer.pal(Inf, "Paired"))
 algo.colors <- c(
   "#66C2A5",
@@ -22,21 +40,22 @@ algo.colors <- c(
 
 data.set.sizes <- data.table(set.name=names(data.sets))[, {
   s <- data.sets[[set.name]]
+  lower.finite <- is.finite(s$targets[, 1])
+  upper.finite <- is.finite(s$targets[, 2])
   list(
     observations=nrow(s$features),
     features=ncol(s$features),
-    upper.limits=sum(is.finite(s$targets[, 2])),
-    lower.limits=sum(is.finite(s$targets[, 1])),
+    upper.limits=sum(upper.finite),
+    lower.limits=sum(lower.finite),
+    both.finite=sum(upper.finite & lower.finite),
     model=ifelse(
       grepl("joint", set.name), "Poisson joint", ifelse(
         grepl("FPOP", set.name), "Poisson FPOP", ifelse(
           grepl("PDPA", set.name), "Poisson PDPA", "Normal unconstrained"))))
 }, by=set.name]
 data.set.sizes[, percent.upper := 100*upper.limits/(upper.limits+lower.limits)]
+data.set.sizes[, percent.finite := 100*both.finite/observations]
 
-evaluate.predictions[, accuracy.percent := 100 - error.percent]
-min.nonzero <- evaluate.predictions[mean.squared.error!=0, min(mean.squared.error)]
-evaluate.predictions[, `-log10.mean.squared.error` := -log10(mean.squared.error+min.nonzero)]
 evaluate.tall <- melt(
   evaluate.predictions[model.name!="iregnet"],
   id.vars=c("fold", "set.name", "model.name"),
@@ -140,7 +159,9 @@ setkey(data.set.sizes, set.name)
 show.data.vec <- data.set.sizes[names(show.data.map), paste0(
   show.data.map,
   "\nn=", observations,
-  "\np=", features)]
+  "\np=", features,
+  "\n", as.integer(percent.finite), "%finite",
+  "\n", as.integer(percent.upper), "%up")]
 names(show.data.vec) <- names(show.data.map)
 evaluate.predictions[, set.fac := factor(set.name, names(rev(show.data.vec)), rev(show.data.vec))]
 show.model.vec <- c(
@@ -148,6 +169,7 @@ show.model.vec <- c(
   "MMIT-L"="mmit.linear.hinge",
   "Interval-CART"="cart",
   TransfoTree="trafotree",
+  TTree0.95="trafotree0.95",
   "L1-Linear"="IntervalRegressionCV",
   Constant="constant")
 show.tall <- mse.tall[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
@@ -178,7 +200,9 @@ mse.show.best <- mse.show.stats[, list(
   ), by=list(set.fac)]
 gg.folds <- ggplot()+
   theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
+  theme(
+    ##strip.text=element_text(hjust=1),
+    panel.margin=grid::unit(0, "lines"))+
   facet_grid(. ~ set.fac, scales="free")+
   ## geom_vline(aes(
   ##   xintercept=min.mean),
