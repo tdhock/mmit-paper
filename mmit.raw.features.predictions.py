@@ -170,7 +170,8 @@ if __name__ == "__main__":
             print("....{0:d}/{1:d}: {2!s}".format(i, len(datasets), d.name))
             try:
                 evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_margin_values=15, n_cpu=n_cpu)
-            except:
+            except Exception as e:
+                print(e.message)
                 failed.append((method, d.name))
 
     print("The following datasets failed to run:")

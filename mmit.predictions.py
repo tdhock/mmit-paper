@@ -23,12 +23,12 @@ class Dataset(object):
     def __init__(self, path):
         self.path = path
         feature_data = pd.read_csv(join(path, "features.csv"))
-        self.X = feature_data.values
+        self.X = feature_data.values.astype(np.double)
         self.X.flags.writeable = False
         self.feature_names = feature_data.columns.values
         self.feature_names.flags.writeable = False
         del feature_data
-        self.y = pd.read_csv(join(path, "targets.csv")).values
+        self.y = pd.read_csv(join(path, "targets.csv")).values.astype(np.double)
         self.y.flags.writeable = False
         self.folds = pd.read_csv(join(path, "folds.csv")).values.reshape(-1, )
         self.folds.flags.writeable = False
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         print(method)
 
         # Determine the values of the HPs based on the learning algorithm
-        params = {"loss": ["hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
+        params = {"loss": ["linear_hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
         if "pruning" in method:
             params.update({"max_depth": [10000000], "min_samples_split": [2]})
             pruning = True
@@ -158,7 +158,8 @@ if __name__ == "__main__":
             print("....{0:d}/{1:d}: {2!s}".format(i, len(datasets), d.name))
             try:
                 evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_margin_values=15, n_cpu=n_cpu)
-            except:
+            except Exception as e:
+                print(e.message)
                 failed.append((method, d.name))
 
     print("The following datasets failed to run:")
