@@ -86,7 +86,7 @@ if __name__ == "__main__":
         print ".... linear hinge"
         method = "mmit.linear.hinge.pruning"
         params = dict(param_template)
-        params["loss"] = "hinge"
+        params["loss"] = "linear_hinge"
         if not exists(join(predictions_path, method, d.name)) or \
                 not exists(join(predictions_path, method, d.name, "predictions.fulltrain.csv")):
             try:
