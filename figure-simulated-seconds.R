@@ -8,18 +8,25 @@ i.vec <- sample(1:nrow(tmat), max(n.vec), replace=TRUE)
 max.tmat <- tmat[i.vec, ]+runif(max(n.vec))
 arg.list <- list(times=10)
 for(n.sim in n.vec){
-  for(loss in c("hinge", "square")){
+  for(loss in c("hinge", "square", "no_ptr_move")){
     arg.list[[paste(n.sim, loss)]] <- substitute({
       result.df <- compute_optimal_costs(max.tmat[1:n.sim, ], 1, loss)
     }, list(loss=loss, n.sim=n.sim))
   }
 }
 m.result <- do.call(microbenchmark, arg.list)
+
 result.dt <- data.table(m.result)
-result.dt[, data := as.integer(sub(" .*", "", expr))]
-result.dt[, hinge.loss := ifelse(grepl("hinge", expr), "linear", "square")]
-result.dt[, seconds := time/1e9]
-stats.dt <- result.dt[, list(
+pattern <- paste0(
+  "(?<data>[0-9]+)",
+  " ",
+  "(?<loss>.*)")
+match.df <- namedCapture::str_match_named(
+  paste(result.dt$expr), pattern, list(data=as.integer))
+match.result <- data.table(match.df, result.dt)
+match.result[, hinge.loss := ifelse(loss=="hinge", "linear", loss)]
+match.result[, seconds := time/1e9]
+stats.dt <- match.result[, list(
   q75=quantile(seconds, 0.75),
   median=median(seconds),
   q25=quantile(seconds, 0.25)

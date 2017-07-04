@@ -1,3 +1,4 @@
+library(survival)
 library(trtf)# svn up -r 734
 library(penaltyLearning)
 
@@ -14,13 +15,28 @@ fold.vec <- sample(rep(1:n.folds, l=nrow(targets.dt)))
 trafotreeNormal <- function(X, y, ...){
   finite.targets <- data.frame(log.penalty=y[is.finite(y)])
   m <- ctm(as.basis(~log.penalty, data=finite.targets), todistr="Normal")
-  train.Surv <- survival::Surv(y[, 1], y[,2], type="interval2")
+  train.Surv <- Surv(y[, 1], y[,2], type="interval2")
   train.df <- data.frame(log.penalty=train.Surv, X)
   mlt.fit <- mlt(m, data=train.df)
   trafotree(
     m, formula = log.penalty ~ ., data=train.df,
     mltargs=list(theta=coef(mlt.fit)),
     control=ctree_control(...))
+}
+
+trafotreeIntercept <- function(X, y, ...){
+  df <- data.frame(
+    log.penalty = Surv(y[,1], y[,2], type = "interval2"),
+    X)
+  yb <- as.basis(~log.penalty, data=data.frame(log.penalty = as.double(5:30)),
+                 ui = matrix(c(0, 1), nrow = 1), ci = 0)
+  m <- ctm(yb, todistr="Normal")
+  ## takes ages because the Turnbull estimator in survival
+  ## is slow when computing starting values
+  mlt.fit <- mlt(m, data=df)
+  trafotree(
+    m, formula = log.penalty ~ ., data = df, parm = 1,
+    mltargs = list(theta = coef(mlt.fit)), stump = FALSE)  
 }
 
 trafotreePredict <- function(fit, X.new){
@@ -31,6 +47,7 @@ trafotreePredict <- function(fit, X.new){
 
 model.error.list <- list()
 for(test.fold in 1:n.folds){
+  print(test.fold)
   is.test <- fold.vec==test.fold
   is.train <- !is.test
   train.targets.mat <- targets.mat[is.train,]
@@ -41,18 +58,23 @@ for(test.fold in 1:n.folds){
     threshold=="min.error", (min.thresh+max.thresh)/2]
   fit.linear <- IntervalRegressionCV(train.features.mat, train.targets.mat)
   fit.tree <- trafotreeNormal(train.features.mat, train.targets.mat)
+  fit.int <- trafotreeIntercept(train.features.mat, train.targets.mat)
   test.features.mat <- features.mat[is.test,]
   pred.vec.list <- list(
     constant=rep(best.thresh, nrow(test.features.mat)),
     IntervalRegressionCV=predict(fit.linear, test.features.mat),
+    TTreeIntOnly=trafotreePredict(fit.int, test.features.mat),
     trafotree0.95=trafotreePredict(fit.tree, test.features.mat))
   test.targets.mat <- targets.mat[is.test,]
   for(model.name in names(pred.vec.list)){
+    print(model.name)
     pred.vec <- as.numeric(pred.vec.list[[model.name]])
     test.roc.list <- targetIntervalROC(test.targets.mat, pred.vec)
-    model.error.list[[paste(test.fold, model.name)]] <- with(test.roc.list, data.frame(
-      test.fold, model.name, auc,
-      thresholds[threshold=="predicted"]))
+    model.error.list[[paste(test.fold, model.name)]] <- with(test.roc.list, {
+      data.frame(
+        test.fold, model.name, auc,
+        thresholds[threshold=="predicted"])
+    })
   }
 }
 model.error <- do.call(rbind, model.error.list)

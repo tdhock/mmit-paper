@@ -1,18 +1,22 @@
 Max margin interval trees
 
 ** TODOs
-*** Experiments
 
-- Does CV model comparison with targets result in the same conclusions
-  as if we used the actual label error function? Yes, in the case of
-  all open intervals and only one label per segmentation problem
-  (neuroblastoma data set). Try with detailed labels, and ChIP-seq
-  data sets, to see if same conclusions hold.
-- Does the linear model learn faster than the tree model? Fix a test
-  set, then plot test accuracy versus number of labeled segmentation
-  problems.
+- For what kinds of data does MMIT with the square loss learn a more
+  accurate model than Interval-CART?
 
-
+** 16 June 2017
+- Emailed Torsten Hothorn, author of trafotree, with this bug
+  description [[file:figure-trafotree-bug.R]]. Test error bigger than
+  constant model for one data set. 
+- He emailed back, with this code to solve the problem
+  [[file:figure-trafotree-bug-response.R]]. Apparently when we set up the
+  basis function for the output, we need to force the variance to be
+  positive (positive slope, achieved via ui/ci arguments to as.basis),
+  and we need to partition only on intercept (not slope/variance,
+  achieved by parm=1 in trafotree). after redoing the test error
+  figure, this does indeed fix the issue (trafotree is now learning as
+  well as IntervalRegressionCV).
 ** 10 May 2017
 Lots more algos and data sets, prediction accuracy figure
 http://bl.ocks.org/tdhock/raw/75751a85d2766cd43be4c36ee3fa58a1/

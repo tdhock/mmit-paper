@@ -57,12 +57,16 @@ works_with_R <- function(Rvers,...){
   }
 }
 options(repos="http://cloud.r-project.org")
+if(packageVersion("survival") < "2.41.2"){
+  install.packages("survival")
+}
 works_with_R(
   "3.3.3",
   data.table="1.10.4",
   tikzDevice="0.10.1",
   Segmentor3IsBack="2.0",
   ggrepel="0.6.5",
+  quadprog="1.5.5",
   doParallel="1.0.6",
   partykit="1.2.0",
   libcoin="0.9.1",
@@ -78,7 +82,7 @@ works_with_R(
 requireGitHub::requireGitHub_package(
   "aldro61",
   "mmit/Rpackage",
-  "f77cc3ed9c72f55d267cdb0dd3f757fa813dad72",
+  "360bff413fbf209d3283b71b1c52bdfd7ab2c81a",
   "mmit")
 registerDoParallel()
 options(
