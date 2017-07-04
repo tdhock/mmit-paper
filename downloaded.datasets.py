@@ -19,8 +19,10 @@ def _generate_intervals_random_width(n_intervals, base_y=0., width_std=0.000001,
     if random_state is None:
         random_state = np.random.RandomState()
 
-    lower = base_y - np.abs(random_state.normal(loc=0., scale=width_std, size=n_intervals))
-    upper = base_y + np.abs(random_state.normal(loc=0., scale=width_std, size=n_intervals))
+    min_random = 1e-4
+
+    lower = base_y - max(np.abs(random_state.normal(loc=0., scale=width_std, size=n_intervals)), min_random)
+    upper = base_y + max(np.abs(random_state.normal(loc=0., scale=width_std, size=n_intervals)), min_random)
 
     shift = random_state.normal(loc=0., scale=y_shift_std, size=n_intervals)
     lower += shift
@@ -34,6 +36,37 @@ def _generate_intervals_random_width(n_intervals, base_y=0., width_std=0.000001,
             upper[idx] = np.infty
 
     return np.array(zip(lower, upper))
+
+
+def _generate_random_interval_francois(base_y=0., width_std=0.001, shift_std=0.001, open_interval_proba=0.3,
+                                       n_draws=100, random_state=None):
+    # The standard deviation cannot be zero
+    width_std = max(width_std, 0.001)
+    shift_std = max(shift_std, 0.001)
+
+    if random_state is None:
+        random_state = np.random.RandomState()
+
+    # Random sampling from a gaussian until we find a valid interval
+    lower = upper = base_y
+    while np.isclose(lower, upper):
+        draws = random_state.normal(loc=base_y, scale=width_std, size=n_draws)
+        lower = min(draws)
+        upper = max(draws)
+
+    # Add a random shift to the interval's position
+    shift = random_state.normal(loc=0., scale=shift_std)
+    lower += shift
+    upper += shift
+
+    # Remove an interval bound with some probability
+    if random_state.binomial(1, open_interval_proba) == 1:
+        if random_state.binomial(1, 0.5) == 1:
+            lower = -np.infty
+        else:
+            upper = np.infty
+
+    return [lower, upper]
 
 
 def _replace_non_standard_values(data):
@@ -56,7 +89,7 @@ def _replace_non_standard_values(data):
 
 if __name__ == "__main__":
     min_examples = 50
-    max_examples = 20000
+    max_examples = 5000
 
     # Find all libsvm format datasets
     datasets = [f.replace(".arff", "") for f in os.listdir(downloaded_data_path) if ".arff" in f]
@@ -71,7 +104,12 @@ if __name__ == "__main__":
         #X = X.todense()
 
         # Load the data
-        data, metadata = loadarff(os.path.join(downloaded_data_path, d_name + ".arff"))
+        try:
+            data, metadata = loadarff(os.path.join(downloaded_data_path, d_name + ".arff"))
+        except:
+            print "Failed to load data set {}. Is format ok?".format(d_name)
+            continue
+
         data = pd.DataFrame(data).dropna()
         if data.shape[0] > max_examples:
             print "Skipped. Too big."
@@ -93,18 +131,25 @@ if __name__ == "__main__":
         X = _replace_non_standard_values(data)
 
         # Generate interval target values
-        y = np.vstack((_generate_intervals_random_width(n_intervals=1, base_y=yi,
-                                                        width_std=np.abs(float(yi) / 3) if not np.isclose(yi, 0.) else 1e-1,
-                                                        y_shift_std=np.abs(float(yi) / 10) if not np.isclose(yi, 0.) else 1e-2,
-                                                        open_interval_proba=0.1, random_state=random_state)
+        y = np.vstack((_generate_random_interval_francois(base_y=yi,
+                                                          width_std=np.abs(float(yi) / 5),
+                                                          shift_std=np.abs(float(yi) / 10),
+                                                          open_interval_proba=0.1,
+                                                          n_draws=10,
+                                                          random_state=random_state)
                        for yi in y_true))
 
+        # Rescale interval bounds in the 0-1 range
+        min_limit = min(yi[0] for yi in y if not np.isinf(yi[0]))
+        max_limit = max(yi[1] for yi in y if not np.isinf(yi[1]))
+        y = (y - min_limit) / (max_limit - min_limit)
+
         for yl, yu in y:
-            assert yl < yu
+            assert not np.isclose(yl, yu)
 
         sorter = y_true.argsort()
         plt.clf()
-        plt.scatter(np.arange(len(y)), y_true[sorter], color="red", label="True target")
+        plt.scatter(np.arange(len(y)), (y_true[sorter] - min_limit) / (max_limit - min_limit), color="red", label="True target")
         plt.scatter(np.arange(len(y)), np.array(zip(*y)[1])[sorter], edgecolor="green", facecolor="green", linewidth=1.0,
                     alpha=0.7, label="Upper bound")
         plt.scatter(np.arange(len(y)), np.array(zip(*y)[0])[sorter], edgecolor="blue", facecolor="none", linewidth=1.0,
@@ -120,11 +165,11 @@ if __name__ == "__main__":
         ds_dir = os.path.join(data_path, d_name)
         if not os.path.exists(ds_dir):
             os.mkdir(ds_dir)
-        header = ",".join(X_names)
+        header = ",".join(["X{0:d}".format(x) for x in xrange(X.shape[1])])
         features = "\n".join(",".join(str(X[i, j]) for j in xrange(X.shape[1])) for i in xrange(X.shape[0]))
         open(os.path.join(ds_dir, "features.csv"), "w").writelines("\n".join([header, features]))
         open(os.path.join(ds_dir, "targets.csv"), "w").writelines(["min.log.penalty,max.log.penalty\n"] +
-                                                                  ["{0:.6f},{1:.6f}\n".format(yi[0], yi[1]) for yi in
+                                                                  ["{},{}\n".format(yi[0], yi[1]) for yi in
                                                                    y])
         open(os.path.join(ds_dir, "folds.csv"), "w").writelines(["fold\n"] + ["{0:d}\n".format(f) for f in folds])
         plt.savefig(os.path.join(ds_dir, "signal.pdf"), bbox_inches="tight")
