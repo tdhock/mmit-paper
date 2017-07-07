@@ -88,13 +88,13 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True,
             range_min = np.diff(sorted_limits)
             range_min = range_min[range_min > 0].min()
             parameters = dict(parameters)  # Make a copy
-            parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values)
+            parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values).tolist()
 
             # Determine the min_samples_split grid
             if not pruning:
                 range_min = 2
                 range_max = X_train.shape[0]
-                parameters["min_samples_split"] = np.logspace(np.log10(range_min), np.log10(range_max), n_min_samples_split_values).astype(np.uint)
+                parameters["min_samples_split"] = np.logspace(np.log10(range_min), np.log10(range_max), n_min_samples_split_values).astype(np.uint).tolist()
             else:
                 parameters["min_samples_split"] = [2]
 
