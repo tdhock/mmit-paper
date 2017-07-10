@@ -10,7 +10,7 @@ N_FOLDS = 5
 RANDOM_SEED = 42
 
 for ds in os.listdir(DATASETS_PATH):
-    if not os.path.isdir(DATASETS_PATH, ds):
+    if not os.path.isdir(os.path.join(DATASETS_PATH, ds)):
         continue
 
     folds_path = os.path.join(DATASETS_PATH, ds, "folds.csv")
@@ -21,4 +21,4 @@ for ds in os.listdir(DATASETS_PATH):
     with open(folds_path, "w") as f:
         f.write("folds\n")
         for i in idx:
-            f.write(str(idx)+ "\n")
+            f.write(str(i)+ "\n")
