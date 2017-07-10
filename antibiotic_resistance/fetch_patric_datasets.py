@@ -124,6 +124,7 @@ with open("datasets/examples_per_dataset.csv", "w") as f_summary:
         if not os.path.exists(ds_save_path):
             os.mkdir(ds_save_path)
         with open(os.path.join(ds_save_path, "targets.csv"), "w") as f_targets:
+            f_targets.write("min.log.penalty,max.log.penalty\n")
             with open(os.path.join(ds_save_path, "genome_ids.csv"), "w") as f_gids:
                 for g_id, lower, upper in ds["data"]:
                     f_targets.write("{0:.6f},{1:.6f}\n".format(lower, upper))
