@@ -16,6 +16,7 @@ from mmit.model_selection import GridSearchCV
 from os import listdir, mkdir, system
 from os.path import abspath, basename, exists, join
 from shutil import rmtree as rmdir
+from sklearn.model_selection import KFold
 from time import time
 
 
@@ -33,6 +34,8 @@ class Dataset(object):
         self.folds = pd.read_csv(join(path, "folds.csv")).values.reshape(-1, )
         self.folds.flags.writeable = False
         self.name = basename(path)
+        # We have to make the numpy arrays unwriteable to do multiprocessing
+        # in cross-validation (relies on pickle)
 
     @property
     def n_examples(self):
@@ -54,7 +57,9 @@ def find_datasets(path):
             yield Dataset(abspath(join(path, d)))
 
 
-def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True, n_margin_values=10, n_cpu=-1):
+def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True,
+                        n_margin_values=10, n_min_samples_split_values=10,
+                        n_cpu=-1):
     ds_result_dir = join(result_dir, d.name)
     if not exists(ds_result_dir):
         mkdir(ds_result_dir)
@@ -83,9 +88,18 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True, n_margi
             range_min = np.diff(sorted_limits)
             range_min = range_min[range_min > 0].min()
             parameters = dict(parameters)  # Make a copy
-            parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values)
+            parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values).tolist()
 
-            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=parameters, cv=10, n_jobs=n_cpu,
+            # Determine the min_samples_split grid
+            if not pruning:
+                range_min = 2
+                range_max = X_train.shape[0]
+                parameters["min_samples_split"] = np.logspace(np.log10(range_min), np.log10(range_max), n_min_samples_split_values).astype(np.uint).tolist()
+            else:
+                parameters["min_samples_split"] = [2]
+
+            cv_protocol = KFold(n_splits=10, shuffle=True, random_state=42)
+            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=parameters, cv=cv_protocol, n_jobs=n_cpu,
                               scoring=metric, pruning=pruning)
             cv.fit(X_train, y_train, d.feature_names)
             fold_predictions[~fold_train] = cv.predict(X_test)
@@ -142,11 +156,10 @@ if __name__ == "__main__":
         # Determine the values of the HPs based on the learning algorithm
         params = {"loss": ["linear_hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
         if "pruning" in method:
-            params.update({"max_depth": [10000000], "min_samples_split": [2]})
+            params.update({"max_depth": [30]})
             pruning = True
         else:
-            params.update({"max_depth": [1, 2, 3, 5, 7, 10, 20, 50, 100, 200, 500, 1000],
-                           "min_samples_split": [2, 5, 10, 30, 50, 100, 300, 500]})
+            params.update({"max_depth": [1, 2, 3, 4, 6, 9, 12, 16, 22, 30]})
             pruning = False
 
         # Prepare the results directory
@@ -157,7 +170,10 @@ if __name__ == "__main__":
         for i, d in enumerate(datasets):
             print("....{0:d}/{1:d}: {2!s}".format(i, len(datasets), d.name))
             try:
-                evaluate_on_dataset(d, params, mse_metric, result_dir, pruning, n_margin_values=15, n_cpu=n_cpu)
+                evaluate_on_dataset(d, params, mse_metric, result_dir, pruning,
+                                    n_margin_values=20,
+                                    n_min_samples_split_values=10,
+                                    n_cpu=n_cpu)
             except Exception as e:
                 print(e.message)
                 failed.append((method, d.name))
