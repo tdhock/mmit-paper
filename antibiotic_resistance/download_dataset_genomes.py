@@ -11,7 +11,9 @@ datasets_path = "./datasets"
 
 
 for ds in os.listdir(datasets_path):
-    if not "streptococcus_pneumoniae__erythromycin" in ds:
+#    if not "streptococcus_pneumoniae__erythromycin" in ds:
+#        continue
+    if not os.path.isdir(os.path.join(datasets_path, ds)):
         continue
 
     contig_path = os.path.join(datasets_path, ds, "contigs")
