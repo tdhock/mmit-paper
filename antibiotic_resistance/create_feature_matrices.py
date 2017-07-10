@@ -7,11 +7,11 @@ import numpy as np
 import os
 import pandas as pd
 
+from collections import defaultdict
+
 DATASETS_PATH = "./datasets"
 
 def generate_feature_matrix(dataset_path):
-    ds = KoverDataset(dataset_path)
-
     genome_identifiers = np.array([l.strip() for l in open(os.path.join(dataset_path, "genome_ids.csv"), "r")])
 
     features = defaultdict(list)
@@ -35,6 +35,8 @@ def generate_feature_matrix(dataset_path):
 
 
 for ds in os.listdir(DATASETS_PATH):
+    if not os.path.isdir(os.path.join(DATASETS_PATH, ds)):
+        continue
     print ds
     print generate_feature_matrix(os.path.join(DATASETS_PATH, ds))
     print "\n" * 2
