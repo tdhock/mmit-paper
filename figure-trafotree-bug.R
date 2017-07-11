@@ -36,7 +36,8 @@ trafotreeIntercept <- function(X, y, ...){
   mlt.fit <- mlt(m, data=df)
   trafotree(
     m, formula = log.penalty ~ ., data = df, parm = 1,
-    mltargs = list(theta = coef(mlt.fit)), stump = FALSE)  
+    mltargs = list(theta = coef(mlt.fit)), stump = FALSE,
+    control=ctree_control(...))
 }
 
 trafotreePredict <- function(fit, X.new){

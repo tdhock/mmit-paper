@@ -4,6 +4,28 @@ library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
 
 future::plan(multiprocess)
 
+## This is the new version of trafotree which only splits on
+## intercept/mean (not slope/variance) -- better prediction accuracy.
+trafotreeIntercept <- function(X, y, ...){
+  . <- log.penalty <- NULL
+  df <- data.frame(
+    log.penalty = Surv(y[,1], y[,2], type = "interval2"),
+    X)
+  yb <- as.basis(~log.penalty, data=data.frame(log.penalty = as.double(5:30)),
+                 ui = matrix(c(0, 1), nrow = 1), ci = 0)
+  m <- ctm(yb, todistr="Normal")
+  ## takes ages because the Turnbull estimator in survival
+  ## is slow when computing starting values
+  mlt.fit <- mlt(m, data=df)
+  trafotree(
+    m, formula = log.penalty ~ ., data = df, parm = 1,
+    mltargs = list(theta = coef(mlt.fit)), stump = FALSE,
+    control=ctree_control(...))
+}
+
+## This is the old version of trafotree which splits on slope/variance
+## as well as intercept/mean -- bad prediction accuracy due to
+## overfitting.
 trafotreeNormal <- function(X, y, ...){
   . <- log.penalty <- NULL
   finite.targets <- data.frame(log.penalty=y[is.finite(y)])
@@ -27,7 +49,8 @@ trafotreeCV <- function
 (X.mat, y.mat, n.folds=4,
  mc.seq=c(
    seq(0, 0.85, by=0.05),
-   seq(0.9, 1, by=0.01))
+   seq(0.9, 1, by=0.01)),
+ fun=trafotreeIntercept
  ){
   fold.vec <- sample(rep(1:n.folds, l=nrow(y.mat)))
   tv.list <- future_lapply(unique(fold.vec), function(validation.fold){
@@ -35,7 +58,7 @@ trafotreeCV <- function
     is.train <- !is.validation
     f.list <- future_lapply(mc.seq, function(mc){
       cat(sprintf("vfold=%d mc=%f\n", validation.fold, mc))
-      fit <- trafotreeNormal(
+      fit <- fun(
         X.mat[is.train,],
         y.mat[is.train,],
         mincriterion=mc)
@@ -80,10 +103,10 @@ trafotreeCV <- function
 
 options(warn=2)
 set.dir.vec <- Sys.glob(file.path("data", "*"))
-trafotree0.95.predictions <- future_lapply(seq_along(set.dir.vec), function(set.dir.i){
+TTreeIntOnly0.95.predictions <- future_lapply(seq_along(set.dir.vec), function(set.dir.i){
   set.dir <- set.dir.vec[[set.dir.i]]
   set.name <- basename(set.dir)
-  out.dir <- file.path("predictions", "trafotree0.95", set.name)
+  out.dir <- file.path("predictions", "TTreeIntOnly0.95", set.name)
   predictions.csv <- file.path(out.dir, "predictions.csv")
   if(file.exists(predictions.csv)){
     pred.dt <- fread(predictions.csv)
@@ -103,7 +126,7 @@ trafotree0.95.predictions <- future_lapply(seq_along(set.dir.vec), function(set.
       is.test <- folds$fold == test.fold
       is.train <- !is.test
       set.seed(1)
-      fit <- trafotreeNormal(
+      fit <- trafotreeIntercept(
         feature.mat[is.train,], target.mat[is.train,])
       pred.dt[is.test, pred.log.penalty := {
         trafotreePredict(fit, feature.mat[is.test, ])
@@ -115,11 +138,11 @@ trafotree0.95.predictions <- future_lapply(seq_along(set.dir.vec), function(set.
   list(predictions=pred.dt)
 })
 
-trafotree.predictions <- list()
+TTreeIntOnly.predictions <- list()
 for(set.dir.i in seq_along(set.dir.vec)){
   set.dir <- set.dir.vec[[set.dir.i]]
   set.name <- basename(set.dir)
-  out.dir <- file.path("predictions", "trafotree", set.name)
+  out.dir <- file.path("predictions", "TTreeIntOnly", set.name)
   predictions.csv <- file.path(out.dir, "predictions.csv")
   if(file.exists(predictions.csv)){
     pred.dt <- fread(predictions.csv)
@@ -148,11 +171,11 @@ for(set.dir.i in seq_along(set.dir.vec)){
     dir.create(out.dir, showWarnings=TRUE, recursive=TRUE)
     fwrite(pred.dt, predictions.csv)
   }
-  trafotree.predictions[[set.name]] <- list(
+  TTreeIntOnly.predictions[[set.name]] <- list(
     predictions=pred.dt)
 }
 
-save(trafotree.predictions, trafotree0.95.predictions,
-     file="trafotree.predictions.RData")
+save(TTreeIntOnly.predictions, TTreeIntOnly0.95.predictions,
+     file="TTreeIntOnly.predictions.RData")
 
 
