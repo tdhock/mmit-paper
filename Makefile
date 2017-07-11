@@ -1,3 +1,5 @@
+trafotree.predictions.RData: trafotree.predictions.R
+	R --no-save < $<
 figure-margin-complexity-linear.pdf: figure-margin-complexity-linear.R figure.margin.complexity.linear.RData
 	R --no-save < $<
 margin.complexity.linear.RData: margin.complexity.linear.R
@@ -23,8 +25,6 @@ figure-data-set-sizes.png: figure-data-set-sizes.R data.sets.RData
 data.sets.RData: data.sets.R
 	R --no-save < $<
 figure-penaltyLearning.png: figure-penaltyLearning.R
-	R --no-save < $<
-trafotree.predictions.RData: trafotree.predictions.R
 	R --no-save < $<
 # Alex
 simulated.datasets: simulated.datasets.py
