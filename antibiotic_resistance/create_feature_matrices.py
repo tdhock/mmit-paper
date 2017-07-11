@@ -42,4 +42,4 @@ for ds in os.listdir(DATASETS_PATH):
     print X.shape
     print "\n" * 2
 
-    X.to_csv(os.path.join(DATASETS_PATH, ds, features.csv), index=False)
+    X.to_csv(os.path.join(DATASETS_PATH, ds, "features.csv"), index=False)

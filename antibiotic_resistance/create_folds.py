@@ -16,9 +16,9 @@ for ds in os.listdir(DATASETS_PATH):
     folds_path = os.path.join(DATASETS_PATH, ds, "folds.csv")
 
     n_examples = len([l for l in open(os.path.join(DATASETS_PATH, ds, "genome_ids.csv"), "r")])
-    idx = (np.arange(n_example, dtype=np.uint) % N_FOLDS) + 1
+    idx = (np.arange(n_examples, dtype=np.uint) % N_FOLDS) + 1
     np.random.RandomState(RANDOM_SEED).shuffle(idx)
     with open(folds_path, "w") as f:
-        f.write("folds\n")
+        f.write("fold\n")
         for i in idx:
             f.write(str(i)+ "\n")
