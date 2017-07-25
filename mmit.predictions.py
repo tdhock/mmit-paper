@@ -128,7 +128,7 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True,
 
 
 if __name__ == "__main__":
-    n_cpu = 40
+    n_cpu = 64
 
     run_algos = [
         "mmit.linear.hinge",
