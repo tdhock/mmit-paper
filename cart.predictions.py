@@ -31,8 +31,8 @@ class IntervalDecisionTreeRegressor(DecisionTreeRegressor):
         y = np.hstack(zip(*y))
 
         # Include the margin
-        y[:len(y) / 2] += self.margin  # Lower bounds
-        y[len(y) / 2:] -= self.margin  # Upper bounds
+        y[:int(len(y) / 2)] += self.margin  # Lower bounds
+        y[int(len(y) / 2):] -= self.margin  # Upper bounds
 
         # Remove all infinity bounds
         is_infinite = np.isinf(y)
