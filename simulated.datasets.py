@@ -28,6 +28,37 @@ def _generate_intervals_random_width(n_intervals, base_y=0., width_std=0.000001,
     return np.array(zip(lower, upper))
 
 
+def _generate_random_interval_francois(base_y=0., width_std=0.000001, shift_std=0.000001, open_interval_proba=0.3,
+                                       n_draws=100, random_state=None):
+    # The standard deviation cannot be zero
+    width_std = max(width_std, 0.001)
+    shift_std = max(shift_std, 0.001)
+
+    if random_state is None:
+        random_state = np.random.RandomState()
+
+    # Random sampling from a gaussian until we find a valid interval
+    lower = upper = base_y
+    while np.isclose(lower, upper):
+        draws = random_state.normal(loc=base_y, scale=width_std, size=n_draws)
+        lower = min(draws)
+        upper = max(draws)
+
+    # Add a random shift to the interval's position
+    shift = random_state.normal(loc=0., scale=shift_std)
+    lower += shift
+    upper += shift
+
+    # Remove an interval bound with some probability
+    if random_state.binomial(1, open_interval_proba) == 1:
+        if random_state.binomial(1, 0.5) == 1:
+            lower = -np.infty
+        else:
+            upper = np.infty
+
+    return [lower, upper]
+
+
 def _generate_data(func, n_examples, n_features, interval_width_std, interval_shift_std,
                    open_interval_proba, x_min=0, x_max=10, random_state=None):
     if random_state is None:
@@ -35,12 +66,21 @@ def _generate_data(func, n_examples, n_features, interval_width_std, interval_sh
 
     X = random_state.uniform(low=x_min, high=x_max, size=(n_examples, n_features))
     x_signal = X[:, 0]
-    y = np.vstack((_generate_intervals_random_width(n_intervals=1,
-                                                    base_y=func(xi),
-                                                    width_std=interval_width_std,
-                                                    y_shift_std=interval_shift_std,
-                                                    open_interval_proba=open_interval_proba,
-                                                    random_state=random_state) for xi in x_signal))
+
+    base_y = np.array([func(xi) for xi in x_signal])
+    y = np.vstack((_generate_random_interval_francois(base_y=yi,
+                                                      width_std=interval_width_std,
+                                                      shift_std=interval_shift_std,
+                                                      open_interval_proba=open_interval_proba,
+                                                      n_draws=10,
+                                                      random_state=random_state)
+                   for yi in base_y))
+
+    # Rescale interval bounds in the 0-1 range
+    min_limit = min(yi[0] for yi in y if not np.isinf(yi[0]))
+    max_limit = max(yi[1] for yi in y if not np.isinf(yi[1]))
+    y = np.array([[(yi[0] - min_limit) / (max_limit - min_limit), (yi[1] - min_limit) / (max_limit - min_limit)]
+                  for yi in y])
 
     fig = plt.figure()
     plt.scatter(X[:, 0], zip(*y)[1], edgecolor="red", facecolor="red", linewidth=1.0, alpha=0.7, label="Upper bound")
@@ -49,6 +89,7 @@ def _generate_data(func, n_examples, n_features, interval_width_std, interval_sh
     plt.ylabel("Targets")
     plt.legend()
     plt.tight_layout()
+    plt.show()
     return X, y, fig
 
 
@@ -74,8 +115,8 @@ def generate_function_datasets(datasets, random_seed=42):
     generate = partial(_generate_data,
                        n_examples=200,
                        n_features=20,
-                       interval_width_std=0.5,
-                       interval_shift_std=0.1,
+                       interval_width_std=0.3,
+                       interval_shift_std=0.2,
                        open_interval_proba=0.2,
                        random_state=random_state)
 
