@@ -77,13 +77,13 @@ def find_datasets(path):
             yield Dataset(abspath(join(path, d)))
 
 
-def evaluate_on_dataset(d, parameters, metric, result_dir, n_margin_values=10, n_cpu=-1):
+def evaluate_on_dataset(d, parameters, metric, result_dir, n_margin_values=10,
+                        n_min_samples_split_values=10, n_cpu=-1):
     ds_result_dir = join(result_dir, d.name)
     if not exists(ds_result_dir):
         mkdir(ds_result_dir)
 
     ds_uid_file = join(ds_result_dir, "dataset.uid")
-    # if exists(ds_uid_file) and open(ds_uid_file, "r").next().strip() == str(hash(d)):
     if not exists(join(ds_result_dir, "predictions.csv")):
         start_time = time()
         fold_predictions = np.zeros(d.n_examples)
@@ -108,9 +108,16 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, n_margin_values=10, n
             parameters = dict(parameters)  # Make a copy
             parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values)
 
+            # Determine the min_samples_split grid
+            range_min = 2
+            range_max = X_train.shape[0]
+            parameters["min_samples_split"] = np.logspace(np.log10(range_min), np.log10(range_max), n_min_samples_split_values).astype(np.uint).tolist()
+
             # Fit a regression tree on the transformed data
-            cv = GridSearchCV(estimator=IntervalDecisionTreeRegressor(), param_grid=parameters, cv=10, n_jobs=n_cpu,
-                              scoring=metric)
+            cv_protocol = KFold(n_splits=10, shuffle=True, random_state=42)
+            cv = GridSearchCV(estimator=IntervalDecisionTreeRegressor(),
+                              param_grid=parameters, cv=cv_protocol,
+                              n_jobs=n_cpu, scoring=metric)
             cv.fit(X_train, y_train)
 
             # Evaluate the model
@@ -145,8 +152,7 @@ if __name__ == "__main__":
 
     datasets = list(find_datasets("./data"))
 
-    params = {"max_depth": [1, 2, 3, 5, 7, 10, 20, 50, 100, 200, 500, 1000],
-              "min_samples_split": [2, 5, 10, 30, 50, 100, 300, 500]}
+    params = {"max_depth": [1, 2, 3, 4, 6, 9, 12, 16, 22, 30]}
 
     # Prepare the results directory
     result_dir = "./predictions/cart"
@@ -155,4 +161,6 @@ if __name__ == "__main__":
     # Run on all datasets
     for i, d in enumerate(datasets):
         print("....{0:d}/{1:d}: {2!s}".format(i + 1, len(datasets), d.name))
-        evaluate_on_dataset(d, params, mse_metric, result_dir, n_margin_values=15, n_cpu=4)
+        evaluate_on_dataset(d, params, mse_metric, result_dir,
+                            n_margin_values=20, n_min_samples_split_values=10,
+                            n_cpu=n_cpu)
