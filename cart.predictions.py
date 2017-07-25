@@ -12,7 +12,7 @@ from mmit.model import TreeExporter
 from os import listdir, mkdir, system
 from os.path import abspath, basename, exists, join
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeRegressor
 from time import time
