@@ -1,6 +1,5 @@
-library(survival)
-library(trtf)# svn up -r 734
-library(penaltyLearning)
+##library(trtf)# svn up -r 734
+source("packages.R")
 
 set.name <- "H3K27ac-H3K4me3_TDHAM_BP_FPOP"
 for(pre in c("targets", "features")){
