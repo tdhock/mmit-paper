@@ -3,6 +3,13 @@ library(trtf)# svn up -r 734
 library(penaltyLearning)
 
 set.name <- "H3K27ac-H3K4me3_TDHAM_BP_FPOP"
+for(pre in c("targets", "features")){
+  from.csv <- paste0("data/", set.name, "/", pre, ".csv")
+  to.csv <- paste0(set.name, "_", pre, ".csv")
+  if(!file.exists(to.csv)){
+    file.copy(from.csv, to.csv)
+  }
+}
 targets.dt <- read.csv(paste0(set.name, "_targets.csv"))
 targets.mat <- as.matrix(targets.dt)
 features.dt <- read.csv(paste0(set.name, "_features.csv"))
