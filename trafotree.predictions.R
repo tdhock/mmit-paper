@@ -11,6 +11,8 @@ trafotreeIntercept <- function(X, y, ...){
   df <- data.frame(
     log.penalty = Surv(y[,1], y[,2], type = "interval2"),
     X)
+  ## RED FLAG :: MAYBE SWITCH TO something based on the outputs in the
+  ## training data (y).
   yb <- as.basis(~log.penalty, data=data.frame(log.penalty = as.double(5:30)),
                  ui = matrix(c(0, 1), nrow = 1), ci = 0)
   m <- ctm(yb, todistr="Normal")

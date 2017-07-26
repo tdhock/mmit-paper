@@ -56,7 +56,9 @@ works_with_R <- function(Rvers,...){
     }
   }
 }
-options(repos="http://cloud.r-project.org")
+options(repos=c(
+          "http://r-forge.r-project.org",
+          "http://cloud.r-project.org"))
 if(packageVersion("survival") < "2.41.2"){
   install.packages("survival")
 }
@@ -70,7 +72,6 @@ works_with_R(
   doParallel="1.0.6",
   partykit="1.2.0",
   libcoin="0.9.1",
-  mlt="0.1.3",
   future="1.4.0",
   microbenchmark="1.4.2.1",
   survival=c("2.41.2", "2.41.3"),#this version is important! otherwise trtf wont work!
@@ -79,6 +80,14 @@ works_with_R(
   "anujkhare/iregnet@93729931a69f896dd752f5065c0d2e8859ed161f",
   "tdhock/directlabels@8f717874c77edf20aeb3bd484381393958cef358",
   "tdhock/animint@9f3f84d8032f992784a4c0531ef117cdc2aa0d3f")
+
+if(!require(trtf)){
+  if(!file.exists("ctm")){
+    system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ctm/")
+  }
+  system("cd ctm/pkg && svn up -r 734 && R CMD INSTALL -l ../../library basefun mlt trtf")
+}
+
 requireGitHub::requireGitHub_package(
   "aldro61",
   "mmit/Rpackage",
