@@ -1,6 +1,10 @@
 ##library(trtf)# svn up -r 734
 source("packages.R")
 
+library(penaltyLearning)
+library(trtf)
+library(survival)
+
 set.name <- "H3K27ac-H3K4me3_TDHAM_BP_FPOP"
 for(pre in c("targets", "features")){
   from.csv <- paste0("data/", set.name, "/", pre, ".csv")
@@ -63,14 +67,14 @@ for(test.fold in 1:n.folds){
     train.targets.mat, rep(0, nrow(train.targets.mat)))
   best.thresh <- train.roc.list$thresholds[
     threshold=="min.error", (min.thresh+max.thresh)/2]
+  fit.int <- trafotreeIntercept(train.features.mat, train.targets.mat)
   fit.linear <- IntervalRegressionCV(train.features.mat, train.targets.mat)
   fit.tree <- trafotreeNormal(train.features.mat, train.targets.mat)
-  fit.int <- trafotreeIntercept(train.features.mat, train.targets.mat)
   test.features.mat <- features.mat[is.test,]
   pred.vec.list <- list(
     constant=rep(best.thresh, nrow(test.features.mat)),
     IntervalRegressionCV=predict(fit.linear, test.features.mat),
-    TTreeIntOnly=trafotreePredict(fit.int, test.features.mat),
+    TTreeIntOnly0.95=trafotreePredict(fit.int, test.features.mat),
     trafotree0.95=trafotreePredict(fit.tree, test.features.mat))
   test.targets.mat <- targets.mat[is.test,]
   for(model.name in names(pred.vec.list)){
