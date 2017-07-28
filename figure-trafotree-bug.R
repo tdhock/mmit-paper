@@ -19,7 +19,7 @@ features.dt <- read.csv(paste0(set.name, "_features.csv"))
 features.mat <- as.matrix(features.dt)
 
 set.seed(1)
-n.folds <- 2
+n.folds <- 3
 fold.vec <- sample(rep(1:n.folds, l=nrow(targets.dt)))
 
 trafotreeNormal <- function(X, y, ...){
@@ -67,9 +67,9 @@ for(test.fold in 1:n.folds){
     train.targets.mat, rep(0, nrow(train.targets.mat)))
   best.thresh <- train.roc.list$thresholds[
     threshold=="min.error", (min.thresh+max.thresh)/2]
-  fit.int <- trafotreeIntercept(train.features.mat, train.targets.mat)
   fit.linear <- IntervalRegressionCV(train.features.mat, train.targets.mat)
   fit.tree <- trafotreeNormal(train.features.mat, train.targets.mat)
+  fit.int <- trafotreeIntercept(train.features.mat, train.targets.mat)
   test.features.mat <- features.mat[is.test,]
   pred.vec.list <- list(
     constant=rep(best.thresh, nrow(test.features.mat)),
