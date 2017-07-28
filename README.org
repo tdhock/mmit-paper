@@ -7,6 +7,11 @@ Max margin interval trees
 
 ** 27 July 2017
 
+Torsten said on 2017-04-07 "You need mlt 0.1-3 and basefun 0.0-37 from
+CRAN. I updated trtf/DESCRIPTION accordingly. A fresh install of
+partykit devel and trtf would be nice as well." My next email on 2017-06-09 (I think
+I found a bug), library(trtf)#svn up -r 734
+
 Trying to figure out how to reproducbly get good results with
 TTreeIntOnly0.95 -- just as accurate as IntervalRegressionCV in [[file:figure-trafotree-bug.R][2-fold
 CV]] on my laptop with these package versions.
