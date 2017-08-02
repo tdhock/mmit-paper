@@ -5,6 +5,8 @@ library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
 
 future::plan(multiprocess)
 
+cores <- 2
+
 ## This is the new version of trafotree which only splits on
 ## intercept/mean (not slope/variance) -- better prediction accuracy.
 trafotreeIntercept <- function(X, y, ...){
@@ -56,7 +58,7 @@ trafotreeCV <- function
  fun=trafotreeIntercept
  ){
   fold.vec <- sample(rep(1:n.folds, l=nrow(y.mat)))
-  tv.list <- parallel::mclapply(unique(fold.vec), function(validation.fold){
+  tv.list <- lapply(unique(fold.vec), function(validation.fold){
     is.validation <- fold.vec==validation.fold
     is.train <- !is.validation
     f.list <- parallel::mclapply(mc.seq, function(mc){
@@ -73,7 +75,7 @@ trafotreeCV <- function
         errors <- sum(is.error)
         data.table(validation.fold, mc, errors, error.percent=errors/.N*100)
       }, by=list(set=ifelse(is.train, "train", "validation"))]
-    })
+    }, mc.cores=cores)
     do.call(rbind, f.list)
   })
   tv <- do.call(rbind, tv.list)
@@ -139,7 +141,7 @@ TTreeIntOnly0.95.predictions <- parallel::mclapply(seq_along(set.dir.vec), funct
     fwrite(pred.dt, predictions.csv)
   }
   list(predictions=pred.dt)
-})
+}, mc.cores=cores)
 
 TTreeIntOnly.predictions <- list()
 for(set.dir.i in seq_along(set.dir.vec)){
