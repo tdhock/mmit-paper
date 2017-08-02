@@ -1,4 +1,5 @@
 source("packages.R")
+
 library(trtf)#"0.1.1")#R CMD INSTALL ctm/pkg/trtf/  svn up -r 698
 ## more recent: svn up -r 734 && R CMD INSTALL basefun mlt trtf
 
@@ -46,7 +47,7 @@ trafotreePredict <- function(fit, X.new){
   cf <- predict(fit, df, type="coef")
   -cf[,"(Intercept)"] / cf[,"log.penalty"]
 }
- 
+
 trafotreeCV <- function
 (X.mat, y.mat, n.folds=4,
  mc.seq=c(
@@ -55,10 +56,10 @@ trafotreeCV <- function
  fun=trafotreeIntercept
  ){
   fold.vec <- sample(rep(1:n.folds, l=nrow(y.mat)))
-  tv.list <- future_lapply(unique(fold.vec), function(validation.fold){
+  tv.list <- parallel::mclapply(unique(fold.vec), function(validation.fold){
     is.validation <- fold.vec==validation.fold
     is.train <- !is.validation
-    f.list <- future_lapply(mc.seq, function(mc){
+    f.list <- parallel::mclapply(mc.seq, function(mc){
       cat(sprintf("vfold=%d mc=%f\n", validation.fold, mc))
       fit <- fun(
         X.mat[is.train,],
@@ -103,9 +104,9 @@ trafotreeCV <- function
     feature.mat, target.mat, mincriterion=best.validation$mc)
 }
 
-options(warn=2)
+# options(warn=2)
 set.dir.vec <- Sys.glob(file.path("data", "*"))
-TTreeIntOnly0.95.predictions <- future_lapply(seq_along(set.dir.vec), function(set.dir.i){
+TTreeIntOnly0.95.predictions <- parallel::mclapply(seq_along(set.dir.vec), function(set.dir.i){
   set.dir <- set.dir.vec[[set.dir.i]]
   set.name <- basename(set.dir)
   out.dir <- file.path("predictions", "TTreeIntOnly0.95", set.name)
@@ -179,5 +180,4 @@ for(set.dir.i in seq_along(set.dir.vec)){
 
 save(TTreeIntOnly.predictions, TTreeIntOnly0.95.predictions,
      file="TTreeIntOnly.predictions.RData")
-
-
+     file="TTreeIntOnly.predictions.RData")
