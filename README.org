@@ -5,6 +5,96 @@ Max margin interval trees
 - For what kinds of data does MMIT with the square loss learn a more
   accurate model than Interval-CART?
 
+** 27 July 2017
+
+Torsten said on 2017-04-07 "You need mlt 0.1-3 and basefun 0.0-37 from
+CRAN. I updated trtf/DESCRIPTION accordingly. A fresh install of
+partykit devel and trtf would be nice as well." My next email on 2017-06-09 (I think
+I found a bug), library(trtf)#svn up -r 734
+
+Trying to figure out how to reproducbly get good results with
+TTreeIntOnly0.95 -- just as accurate as IntervalRegressionCV in [[file:figure-trafotree-bug.R][2-fold
+CV]] on my laptop with these package versions.
+
+#+BEGIN_SRC 
+> devtools::session_info()
+Session info --------------------------------------------------------------------------------------
+ setting  value                       
+ version  R version 3.3.3 (2017-03-06)
+ system   i686, linux-gnu             
+ ui       X11                         
+ language en_US                       
+ collate  en_US.UTF-8                 
+ tz       Canada/Eastern              
+ date     2017-07-27                  
+
+Packages ------------------------------------------------------------------------------------------
+ package         * version    date       source                                  
+ alabama           2015.3-1   2015-03-06 CRAN (R 3.3.3)                          
+ base            * 3.3.3      2017-03-07 local                                   
+ basefun         * 0.0-38     2017-06-16 local                                   
+ BB                2015.12-1  2016-08-11 R-Forge (R 3.3.3)                       
+ bitops            1.0-6      2013-08-17 CRAN (R 3.2.2)                          
+ caTools           1.17.1     2014-09-10 CRAN (R 3.2.2)                          
+ codetools         0.2-15     2016-10-05 CRAN (R 3.3.3)                          
+ colorspace        1.3-0      2016-11-01 R-Forge (R 3.3.1)                       
+ compiler          3.3.3      2017-03-07 local                                   
+ data.table      * 1.10.5     2017-04-21 local                                   
+ datasets        * 3.3.3      2017-03-07 local                                   
+ devtools          1.13.2     2017-06-02 cran (@1.13.2)                          
+ digest            0.6.12     2017-01-27 cran (@0.6.12)                          
+ directlabels      2017.03.31 2017-04-01 Github (tdhock/directlabels@bc15a4f)    
+ Formula           1.2-1      2016-02-17 R-Forge (R 3.3.3)                       
+ future            1.4.0      2017-03-13 CRAN (R 3.3.3)                          
+ geometry          0.3-6      2015-09-09 CRAN (R 3.2.2)                          
+ ggplot2           2.1.0      2017-03-25 Github (faizan-khan-iit/ggplot2@5fb99d0)
+ globals           0.10.0     2017-04-17 CRAN (R 3.3.3)                          
+ graphics        * 3.3.3      2017-03-07 local                                   
+ grDevices       * 3.3.3      2017-03-07 local                                   
+ grid            * 3.3.3      2017-03-07 local                                   
+ gtable            0.2.0      2016-02-26 CRAN (R 3.2.2)                          
+ labeling          0.3        2014-08-23 R-Forge (R 3.2.2)                       
+ lattice         * 0.20-34    2016-09-06 CRAN (R 3.3.3)                          
+ libcoin         * 0.9-2      2017-04-05 R-Forge (R 3.3.3)                       
+ listenv           0.6.0      2015-12-28 CRAN (R 3.3.3)                          
+ magic             1.5-6      2013-11-20 CRAN (R 3.2.2)                          
+ Matrix            1.2-8      2017-01-20 CRAN (R 3.3.3)                          
+ memoise           1.1.0      2017-04-21 cran (@1.1.0)                           
+ methods         * 3.3.3      2017-03-07 local                                   
+ mlt             * 0.1-4      2017-06-16 local                                   
+ munsell           0.4.3      2016-02-13 CRAN (R 3.2.2)                          
+ mvtnorm         * 1.0-5      2016-02-02 R-Forge (R 3.2.2)                       
+ namedCapture    * 2017.01.15 2017-04-29 Github (tdhock/namedCapture@1da425b)    
+ numDeriv          2016.8-1   2016-08-21 R-Forge (R 3.3.3)                       
+ orthopolynom      1.0-5      2013-02-04 CRAN (R 3.3.3)                          
+ parallel          3.3.3      2017-03-07 local                                   
+ partykit        * 1.2-0      2017-04-24 R-Forge (R 3.3.3)                       
+ penaltyLearning * 2017.06.14 2017-06-22 local                                   
+ plyr              1.8.4      2016-06-08 CRAN (R 3.2.2)                          
+ polynom           1.3-9      2016-12-08 CRAN (R 3.3.3)                          
+ quadprog          1.5-5      2013-04-17 CRAN (R 3.2.2)                          
+ RColorBrewer    * 1.1-2      2014-12-07 CRAN (R 3.2.2)                          
+ Rcpp              0.12.11    2017-05-22 cran (@0.12.11)                         
+ RCurl           * 1.96-0     2016-08-07 local                                   
+ requireGitHub     2017.03.16 2017-04-29 Github (tdhock/requireGitHub@5de2020)   
+ RJSONIO         * 1.3-0      2014-07-28 CRAN (R 3.2.2)                          
+ RSelenium       * 1.3.6      2016-11-09 Github (ropensci/RSelenium@22f06b9)     
+ rstudioapi        0.6        2016-06-27 cran (@0.6)                             
+ sandwich          2.3-4      2015-09-24 CRAN (R 3.2.2)                          
+ scales            0.4.1      2016-11-09 CRAN (R 3.3.1)                          
+ splines           3.3.3      2017-03-07 local                                   
+ stats           * 3.3.3      2017-03-07 local                                   
+ survival        * 2.41-3     2017-04-04 CRAN (R 3.3.3)                          
+ tools             3.3.3      2017-03-07 local                                   
+ trtf            * 0.2-1      2017-06-16 local                                   
+ utils           * 3.3.3      2017-03-07 local                                   
+ variables       * 0.0-30     2017-06-16 local                                   
+ withr             1.0.2      2016-06-20 cran (@1.0.2)                           
+ XML             * 3.99-0     2016-08-07 local                                   
+ zoo               1.7-13     2015-12-15 R-Forge (R 3.2.2)                       
+> 
+#+END_SRC
+
 ** 16 June 2017
 - Emailed Torsten Hothorn, author of trafotree, with this bug
   description [[file:figure-trafotree-bug.R]]. Test error bigger than

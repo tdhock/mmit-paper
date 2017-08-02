@@ -1,15 +1,24 @@
-library(survival)
-library(trtf)# svn up -r 734
+source("packages.R")
+
 library(penaltyLearning)
+library(trtf)
+library(survival)
 
 set.name <- "H3K27ac-H3K4me3_TDHAM_BP_FPOP"
+for(pre in c("targets", "features")){
+  from.csv <- paste0("data/", set.name, "/", pre, ".csv")
+  to.csv <- paste0(set.name, "_", pre, ".csv")
+  if(!file.exists(to.csv)){
+    file.copy(from.csv, to.csv)
+  }
+}
 targets.dt <- read.csv(paste0(set.name, "_targets.csv"))
 targets.mat <- as.matrix(targets.dt)
 features.dt <- read.csv(paste0(set.name, "_features.csv"))
 features.mat <- as.matrix(features.dt)
 
 set.seed(1)
-n.folds <- 2
+n.folds <- 3
 fold.vec <- sample(rep(1:n.folds, l=nrow(targets.dt)))
 
 trafotreeNormal <- function(X, y, ...){
@@ -64,7 +73,7 @@ for(test.fold in 1:n.folds){
   pred.vec.list <- list(
     constant=rep(best.thresh, nrow(test.features.mat)),
     IntervalRegressionCV=predict(fit.linear, test.features.mat),
-    TTreeIntOnly=trafotreePredict(fit.int, test.features.mat),
+    TTreeIntOnly0.95=trafotreePredict(fit.int, test.features.mat),
     trafotree0.95=trafotreePredict(fit.tree, test.features.mat))
   test.targets.mat <- targets.mat[is.test,]
   for(model.name in names(pred.vec.list)){
