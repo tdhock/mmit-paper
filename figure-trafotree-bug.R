@@ -158,8 +158,9 @@ p <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(. ~ variable, scales="free")+
-  geom_point(aes(value, model.name), data=model.tall)
+  geom_point(aes(value, model.name), data=model.tall)+
+  xlab("")
 print(p)
-pdf("figure-trafotree-bug.pdf")
+pdf("figure-trafotree-bug.pdf", h=2)
 print(p)
 dev.off()
