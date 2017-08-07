@@ -18,7 +18,7 @@ features.dt <- read.csv(paste0(set.name, "_features.csv"))
 features.mat <- as.matrix(features.dt)
 
 set.seed(1)
-n.folds <- 3
+n.folds <- 5
 fold.vec <- sample(rep(1:n.folds, l=nrow(targets.dt)))
 
 trafotreeNormal <- function(X, y, ...){
@@ -107,7 +107,7 @@ trafotreeCV <- function
                fill="white",
                data=best.validation)
   print(gg)
-  trafotreeNormal(
+  fun(
     X.mat, y.mat, mincriterion=best.validation$mc)
 }
 

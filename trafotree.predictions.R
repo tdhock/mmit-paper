@@ -102,7 +102,7 @@ trafotreeCV <- function
                fill="white",
                data=best.validation)
   print(gg)
-  trafotreeNormal(
+  fun(
     X.mat, y.mat, mincriterion=best.validation$mc)
 }
 
