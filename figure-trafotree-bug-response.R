@@ -68,10 +68,11 @@ sum(sapply(sr.fit2, logLik))
 ### plot tree
 library("ATR") ### from partykit R-forge
 nid <- min(nodeids(tr, terminal = TRUE))
-pdf("tree.pdf", width = 6, height = 10)
+pdf("figure-trafotree-bug-response.pdf", width = 15, height = 12)
 plot(rotate(tr), terminal_panel = trtf:::node_mlt, nobs.loc='top',
      tp_args = list(type = "distribution", id = FALSE, ylines = 3, K = 100, 
-                    fill = "lightblue", xaxis = nid))
+       fill = "lightblue", xaxis = nid))
+dev.off()
 
 ### partition wrt intercept only
 tr <- trafotree(m, formula = log.penalty ~ ., data = df, parm = 1,

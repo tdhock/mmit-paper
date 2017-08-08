@@ -1,8 +1,10 @@
-source("packages.R")
-
+##source("packages.R")
+.libPaths("library")
+library(data.table)
 library(penaltyLearning)
 library(trtf)
 library(survival)
+library(ggplot2)
 
 set.name <- "H3K27ac-H3K4me3_TDHAM_BP_FPOP"
 for(pre in c("targets", "features")){
@@ -124,14 +126,14 @@ for(test.fold in 1:n.folds){
     threshold=="min.error", (min.thresh+max.thresh)/2]
   fit.linear <- IntervalRegressionCV(train.features.mat, train.targets.mat)
   fit.tree <- trafotreeNormal(train.features.mat, train.targets.mat)
-  fit.cvtree <- trafotreeCV(train.features.mat, train.targets.mat)
+  ##fit.cvtree <- trafotreeCV(train.features.mat, train.targets.mat)
   fit.int <- trafotreeIntercept(train.features.mat, train.targets.mat)
   test.features.mat <- features.mat[is.test,]
   pred.vec.list <- list(
     constant=rep(best.thresh, nrow(test.features.mat)),
     IntervalRegressionCV=predict(fit.linear, test.features.mat),
     TTreeIntOnly0.95=trafotreePredict(fit.int, test.features.mat),
-    TTreeIntOnly=trafotreePredict(fit.cvtree, test.features.mat),
+    ##TTreeIntOnly=trafotreePredict(fit.cvtree, test.features.mat),
     trafotree0.95=trafotreePredict(fit.tree, test.features.mat))
   test.targets.mat <- targets.mat[is.test,]
   for(model.name in names(pred.vec.list)){
