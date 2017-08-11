@@ -3,7 +3,10 @@ Max margin interval trees
 ** TODOs
 
 - For what kinds of data does MMIT with the square loss learn a more
-  accurate model than Interval-CART?
+  accurate model than Interval-CART? (Alex example)
+- Worst case for the squared loss (empirical + theoretical) : Guillem's example of quadratic worst case.
+- Uncensored outputs
+- Motivate linear patterns using Toby's univariate experiment: train a linear model and a mmit for each feature individually and calculate the difference. The feature with the biggest difference should have a really non-linear pattern.
 
 ** 27 July 2017
 
