@@ -226,6 +226,36 @@ pdf("figure-evaluate-predictions-folds.pdf", 9, 3)
 print(gg.folds)
 dev.off()
 
+gg.folds <- ggplot()+
+  theme_bw()+
+  theme(
+    panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ set.fac, scales="free")+
+  geom_point(aes(
+    accuracy.percent, model.fac),
+    shape=1,
+    data=mse.show.tall)+
+  ylab("model")
+print(gg.folds)
+pdf("figure-evaluate-predictions-folds-accuracy.pdf", 9, 3)
+print(gg.folds)
+dev.off()
+
+gg.folds <- ggplot()+
+  theme_bw()+
+  theme(
+    panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ set.fac, scales="free")+
+  geom_point(aes(
+    x=auc, y=model.fac),
+    shape=1,
+    data=mse.show.tall)+
+  ylab("model")
+print(gg.folds)
+pdf("figure-evaluate-predictions-folds-auc.pdf", 9, 3)
+print(gg.folds)
+dev.off()
+
 ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
