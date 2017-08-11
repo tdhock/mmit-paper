@@ -3,6 +3,10 @@ source("packages.R")
 size <- 20
 n <- 1:size
 n.vec <- (-n)^n
-out.mat <- cbind(n.vec, n.vec + abs(rnorm(size)))
+out.mat <- cbind(
+  ifelse(n.vec<0, -Inf, n.vec),
+  ifelse(n.vec<0, n.vec, Inf))
 (result <- mmit::compute_optimal_costs(out.mat, 1, "square"))
+pdf("figure-worst-case-time-complexity.pdf")
 plot(result$moves)
+dev.off()
