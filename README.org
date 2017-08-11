@@ -2,6 +2,7 @@ Max margin interval trees
 
 ** TODOs
 
+- Simulated dataset add noise and remove examples, currently MMITs are as good as linear on linear dataset
 - For what kinds of data does MMIT with the square loss learn a more
   accurate model than Interval-CART? (Alex example)
 - Worst case for the squared loss (empirical + theoretical) : Guillem's example of quadratic worst case.
