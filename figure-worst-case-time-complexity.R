@@ -1,8 +1,8 @@
 source("packages.R")
 
-mmit::compute_optimal_costs(rbind(
-  c(-Inf, 1),
-  c(0, Inf),
-  c(-Inf, -1000)
-  ), 1, "square")
-
+size <- 20
+n <- 1:size
+n.vec <- (-n)^n
+out.mat <- cbind(n.vec, n.vec + abs(rnorm(size)))
+(result <- mmit::compute_optimal_costs(out.mat, 1, "square"))
+plot(result$moves)
