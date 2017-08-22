@@ -23,16 +23,30 @@ trafotreeIntercept <- function(X, y, ...){
   ## takes ages because the Turnbull estimator in survival
   ## is slow when computing starting values
   mlt.fit <- mlt(m, data=df)
-  trafotree(
+  tree.fit <- trafotree(
     m, formula = log.penalty ~ ., data = df, parm = 1,
     mltargs = list(theta = coef(mlt.fit)), stump = FALSE,
     control=ctree_control(...))
+  by.result <- by(is.finite(y), predict(tree.fit), colSums)
+  finite.count.mat <- do.call(rbind, by.result)
+  cf <- coef(tree.fit)
+  pred.vec <- -cf[,"(Intercept)"] / cf[,"log.penalty"]
+  largest.lower <- by(y[,1], predict(tree.fit), max)
+  smallest.upper <- by(y[,2], predict(tree.fit), min)
+  no.upper <- finite.count.mat[,2]==0
+  no.lower <- finite.count.mat[,1]==0
+  pred.vec[no.upper] <- largest.lower[no.upper]
+  pred.vec[no.lower] <- smallest.upper[no.lower]
+  tree.fit$pred.log.lambda <- pred.vec
+  list(
+    fit=tree.fit,
+    pred.vec=pred.vec)
 }
 
-trafotreePredict <- function(fit, X.new){
+trafotreePredict <- function(L, X.new){
   df <- data.frame(X.new)
-  cf <- predict(fit, df, type="coef")
-  -cf[,"(Intercept)"] / cf[,"log.penalty"]
+  node.vec <- predict(L$fit, df)
+  L$pred.vec[paste(node.vec)]
 }
 
 test.fold <- 1
@@ -41,6 +55,8 @@ is.train <- !is.test
 train.targets.mat <- targets.mat[is.train,]
 train.features.mat <- features.mat[is.train,]
 tr <- trafotreeIntercept(train.features.mat, train.targets.mat)
+
+stopifnot(is.numeric(trafotreePredict(tr, features.mat[is.test,])))
 
 ## Torsten's plotting code.
 nid <- min(nodeids(tr, terminal = TRUE))
