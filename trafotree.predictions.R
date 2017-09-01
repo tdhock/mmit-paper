@@ -68,25 +68,26 @@ trafotreeCV <- function
         y.mat[is.train,],
         mincriterion=mc)
       pred.log.penalty <- trafotreePredict(fit, X.mat)
-      is.lo <- pred.log.penalty < y.mat[,1]
-      is.hi <- y.mat[,2] < pred.log.penalty
-      is.error <- is.lo|is.hi
-      data.table(is.train, is.error)[, {
-        errors <- sum(is.error)
-        data.table(validation.fold, mc, errors, error.percent=errors/.N*100)
+      res.vec <- targetIntervalResidual(y.mat, pred.log.penalty)
+      data.table(is.train, residual=res.vec)[, {
+        errors <- sum(residual!=0)
+        data.table(
+          validation.fold, mc, errors,
+          mse=mean(residual * residual),
+          error.percent=errors/.N*100)
       }, by=list(set=ifelse(is.train, "train", "validation"))]
     }, mc.cores=cores)
     do.call(rbind, f.list)
   })
   tv <- do.call(rbind, tv.list)
   tv.stats <- tv[, list(
-    mean=mean(error.percent),
-    sd=sd(error.percent)
+    mean=mean(mse),
+    sd=sd(mse)
     ), by=list(mc, set)]
-  best.validation <- tv.stats[set=="validation",][which.min(mean),]
+  best.validation <- tv.stats[set=="validation"][which.min(mean)]
   gg <- ggplot()+
     geom_line(aes(
-      mc, error.percent, color=set, group=paste(validation.fold, set)),
+      mc, mse, color=set, group=paste(validation.fold, set)),
               data=tv)+
     geom_ribbon(aes(
       mc, ymin=mean-sd, ymax=mean+sd, fill=set),
@@ -182,4 +183,4 @@ for(set.dir.i in seq_along(set.dir.vec)){
 
 save(TTreeIntOnly.predictions, TTreeIntOnly0.95.predictions,
      file="TTreeIntOnly.predictions.RData")
-     file="TTreeIntOnly.predictions.RData")
+

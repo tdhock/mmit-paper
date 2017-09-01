@@ -1,3 +1,5 @@
+trafotree.predictions.corrected.RData: trafotree.predictions.corrected.R
+	R --no-save < $<
 trafotree.predictions.RData: trafotree.predictions.R
 	R --no-save < $<
 figure-margin-complexity-linear.pdf: figure-margin-complexity-linear.R figure.margin.complexity.linear.RData

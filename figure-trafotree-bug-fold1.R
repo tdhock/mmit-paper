@@ -13,7 +13,7 @@ set.seed(1)
 n.folds <- 5
 fold.vec <- sample(rep(1:n.folds, l=nrow(targets.dt)))
 
-trafotreeIntercept <- function(X, y, ...){
+trafotreeCorrected <- function(X, y, ...){
   df <- data.frame(
     log.penalty = Surv(y[,1], y[,2], type = "interval2"),
     X)
@@ -54,7 +54,7 @@ is.test <- fold.vec==test.fold
 is.train <- !is.test
 train.targets.mat <- targets.mat[is.train,]
 train.features.mat <- features.mat[is.train,]
-tr <- trafotreeIntercept(train.features.mat, train.targets.mat)
+tr <- trafotreeCorrected(train.features.mat, train.targets.mat)
 
 stopifnot(is.numeric(trafotreePredict(tr, features.mat[is.test,])))
 
