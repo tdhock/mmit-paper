@@ -1,6 +1,10 @@
 source("packages.R")
 
 load("evaluate.predictions.RData")
+
+evaluate.predictions[, min.metric := ifelse(grepl("MinIncorrect|constant", model.name), "01loss", "MSE")]
+evaluate.predictions[, Model := sub("MinIncorrect", "", model.name)]
+
 load("data.sets.RData")
 
 evaluate.predictions[, accuracy.percent := 100 - error.percent]
@@ -13,12 +17,12 @@ trafo.bad.gg <- ggplot()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(. ~ variable, scales="free")+
   geom_point(aes(
-    value, model.name),
+    ifelse(value < -5, -Inf, value), Model, color=min.metric),
     data=trafo.bad.tall,
     shape=1)+
   xlab("")
 print(trafo.bad.gg)
-pdf("figure-evaluate-predictions-H3K27ac-H3K4me3_TDHAM_BP_FPOP.pdf", 8, 2)
+pdf("figure-evaluate-predictions-one-H3K27ac-H3K4me3_TDHAM_BP_FPOP.pdf", 8, 2)
 print(trafo.bad.gg)
 dev.off()
 
