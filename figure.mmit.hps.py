@@ -15,7 +15,7 @@ def load_parameters_by_method(predictions_path):
     dataset_params_by_method = defaultdict(lambda: {})
     print "Loading parameters..."
     for method in listdir(predictions_path):
-        if isdir(join(predictions_path, method)) and "mmit" in method and "pruning" not in method:  # XXX: Temporary remove pruning
+        if isdir(join(predictions_path, method)) and "mmit" in method and "pruning" not in method:
             print "\t", method
             for dataset in listdir(join(predictions_path, method)):
                 print "\t\t", dataset
@@ -46,36 +46,54 @@ if __name__ == "__main__":
                         linewidth=1, s=20, alpha=0.7, label=method if not method_is_plotted[method] else None)
             method_is_plotted[method] = True
     plt.axhline(np.log10(clip_to_min), linestyle="--", color="red", label="Zero value")
-
-    for m in np.logspace(-3, 2, 35):
-        plt.axhline(np.log10(m), dashes=(1, 1, 1, 1), color="grey", alpha=0.3)
-
     plt.xlim([-1, len(dataset_names)])
     plt.xticks(np.arange(len(dataset_names)), dataset_names, rotation=90)
     plt.ylabel(r"$\log_{10}(\epsilon)$")
     plt.title("Selected margin values ({0!s} means 0.)".format(clip_to_min))
-    plt.legend(bbox_to_anchor=(1.25, 1.))
-
+    plt.legend(bbox_to_anchor=(1.2, 1.))
     plt.gcf().set_size_inches(12, 4)
-    plt.savefig("figure.mmit.margins.pdf", bbox_inches="tight")
+    plt.savefig("figure-mmit-hp-margins.pdf", bbox_inches="tight")
 
     # ------------------------------------------------------------------------------------------------------------------
-    # CV score vs margin
+    # Selected min_samples_split by dataset
     # ------------------------------------------------------------------------------------------------------------------
+    plt.clf()
+    method_is_plotted = defaultdict(bool)
+    dataset_names = sorted(dataset_params_by_method.keys())
     for i, dataset in enumerate(dataset_names):
         for j, (method, fold_parameters) in enumerate(dataset_params_by_method[dataset].iteritems()):
-            plt.clf()
-            for k in xrange(len(fold_parameters)):
-                # For each margin value, find the min HPs
-                best_score_by_margin = defaultdict(lambda: -np.infty)
-                for cv_result in fold_parameters[k]["all"]:
-                    hps, scores = cv_result
-                    margin = hps["margin"]
-                    if scores["cv"] > best_score_by_margin[margin]:
-                        best_score_by_margin[margin] = scores["cv"]
-                margins = np.sort(best_score_by_margin.keys())
-                margins[margins == 0] = clip_to_min
+            hp_values = np.array([f["best"]["min_samples_split"] for f in fold_parameters])
+            offset = 1e-4
+            plt.scatter([i + j * offset] * 5, hp_values, edgecolor=cmap[j], facecolor="none",
+                        linewidth=1, s=20, alpha=0.7, label=method if not method_is_plotted[method] else None)
+            method_is_plotted[method] = True
+    plt.xlim([-1, len(dataset_names)])
+    plt.xticks(np.arange(len(dataset_names)), dataset_names, rotation=90)
+    plt.ylim(ymin=-5)
+    plt.ylabel("Min samples split")
+    plt.title("Selected min_samples_split values")
+    plt.legend(bbox_to_anchor=(1.2, 1.))
+    plt.gcf().set_size_inches(12, 4)
+    plt.savefig("figure-mmit-hp-min-samples-split.pdf", bbox_inches="tight")
 
-                plt.plot(np.log10(margins), np.log10([best_score_by_margin[m] * -1 for m in margins]))
-            plt.title("Method: {0!s}   Dataset: {1!s}".format(method, dataset))
-            plt.show()
+    # ------------------------------------------------------------------------------------------------------------------
+    # Selected max_depth by dataset
+    # ------------------------------------------------------------------------------------------------------------------
+    plt.clf()
+    method_is_plotted = defaultdict(bool)
+    dataset_names = sorted(dataset_params_by_method.keys())
+    for i, dataset in enumerate(dataset_names):
+        for j, (method, fold_parameters) in enumerate(dataset_params_by_method[dataset].iteritems()):
+            hp_values = np.array([f["best"]["max_depth"] for f in fold_parameters])
+            offset = 1e-4
+            plt.scatter([i + j * offset] * 5, hp_values, edgecolor=cmap[j], facecolor="none",
+                        linewidth=1, s=20, alpha=0.7, label=method if not method_is_plotted[method] else None)
+            method_is_plotted[method] = True
+    plt.xlim([-1, len(dataset_names)])
+    plt.xticks(np.arange(len(dataset_names)), dataset_names, rotation=90)
+    plt.ylim(ymin=-1)
+    plt.ylabel("Max depth")
+    plt.title("Selected max_depth values")
+    plt.legend(bbox_to_anchor=(1.2, 1.))
+    plt.gcf().set_size_inches(12, 4)
+    plt.savefig("figure-mmit-hp-max-depth.pdf", bbox_inches="tight")
