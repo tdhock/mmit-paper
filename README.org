@@ -2,14 +2,28 @@ Max margin interval trees
 
 ** TODOs
 
-- Simulated dataset add noise and remove examples, currently MMITs are as good as linear on linear dataset
+For the journal paper:
+
+- Simulated dataset add noise and remove examples, currently MMITs are
+  as good as linear on linear dataset
 - For what kinds of data does MMIT with the square loss learn a more
   accurate model than Interval-CART? (Alex example)
-- Worst case for the squared loss (empirical + theoretical) : Guillem's example of quadratic worst case.
+- Worst case for the squared loss (empirical + theoretical) :
+  Guillem's example of quadratic worst case.
 - Uncensored outputs (survival datasets)
-- Motivate linear patterns using Toby's univariate experiment: train a linear model and a mmit for each feature individually and calculate the difference. The feature with the biggest difference should have a really non-linear pattern.
+- Motivate nonlinear patterns using Toby's univariate experiment:
+  train a linear model and a mmit for each feature individually and
+  calculate the difference. The feature with the biggest difference
+  should have a really non-linear pattern.
+- Figure showing validation error as a function of regularization
+  parameters, tree depth and margin size (either as a 2d heatmap or
+  two line plots). Especially for the margin it would be nice to show
+  that has a regularizing effect.
+
+Probably can leave for future work:
+
 - Forests
-- Non-constant leaves
+- Non-constant leaves. 
 
 ** 1 Sept 2017
 

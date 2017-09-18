@@ -169,10 +169,10 @@ show.model.vec <- c(
   "MMIT-S"="mmit.squared.hinge",
   "MMIT-L"="mmit.linear.hinge",
   "Interval-CART"="cart",
-  TransfoTree="trafotree",
-  TTree0.95="trafotree0.95",
+  TransfoTree="TTreeIntOnly",
+  ##TTree0.95="trafotree0.95",
   "L1-Linear"="IntervalRegressionCV",
-  Constant="constant")
+  Constant="constantMSE")
 show.tall <- mse.tall[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
 show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
 
@@ -217,12 +217,27 @@ gg.folds <- ggplot()+
   geom_blank(aes(
     log10.mse, model.fac),
     data=data.table(
-      log10.mse=c(-2.5, 0.5),
+      log10.mse=c(-1.5, -0.2),
+      set.fac=factor(show.data.vec[["simulated.sin"]], rev(show.data.vec)),
+      model.fac=factor("Interval-CART", rev(names(show.model.vec)))))+
+  geom_blank(aes(
+    log10.mse, model.fac),
+    data=data.table(
+      log10.mse=c(-4.8, -1.2),
       set.fac=factor(show.data.vec[["servo"]], rev(show.data.vec)),
       model.fac=factor("Interval-CART", rev(names(show.model.vec)))))+
-  xlab("log10(mean squared test error) in 5-fold CV, one point per fold")
+  geom_blank(aes(
+    log10.mse, model.fac),
+    data=data.table(
+      log10.mse=c(-1.4, -0.4),
+      set.fac=factor(show.data.vec[["simulated.linear"]], rev(show.data.vec)),
+      model.fac=factor("Interval-CART", rev(names(show.model.vec)))))+
+  scale_x_continuous(
+    "log10(mean squared test error) in 5-fold CV, one point per fold"
+    ##,breaks=seq(-5, 1, by=0.5)
+  )
 print(gg.folds)
-pdf("figure-evaluate-predictions-folds.pdf", 9, 3)
+pdf("figure-evaluate-predictions-folds.pdf", 9, 2.5)
 print(gg.folds)
 dev.off()
 
