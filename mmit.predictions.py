@@ -88,7 +88,7 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True,
             range_min = np.diff(sorted_limits)
             range_min = range_min[range_min > 0].min()
             parameters = dict(parameters)  # Make a copy
-            parameters["margin"] = np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values).tolist()
+            parameters["margin"] = [0.] + np.logspace(np.log10(range_min), np.log10(range_max), n_margin_values).tolist()
 
             # Determine the min_samples_split grid
             if not pruning:
@@ -128,7 +128,7 @@ def evaluate_on_dataset(d, parameters, metric, result_dir, pruning=True,
 
 
 if __name__ == "__main__":
-    n_cpu = 64
+    n_cpu = 50
 
     run_algos = [
         "mmit.linear.hinge",
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         print(method)
 
         # Determine the values of the HPs based on the learning algorithm
-        params = {"loss": ["linear_hinge" if method.split(".")[1] == "linear" else "squared_hinge"]}
+        params = {"loss": ["linear_hinge" if method.split(".")[1] == "linear" else "squared_hinge"], "random_state": [np.random.RandomState(42)]}
         if "pruning" in method:
             params.update({"max_depth": [30]})
             pruning = True
