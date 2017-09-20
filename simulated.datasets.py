@@ -76,12 +76,6 @@ def _generate_data(func, n_examples, n_features, interval_width_std, interval_sh
                                                       random_state=random_state)
                    for yi in base_y))
 
-    # Rescale interval bounds in the 0-1 range
-    min_limit = min(yi[0] for yi in y if not np.isinf(yi[0]))
-    max_limit = max(yi[1] for yi in y if not np.isinf(yi[1]))
-    y = np.array([[(yi[0] - min_limit) / (max_limit - min_limit), (yi[1] - min_limit) / (max_limit - min_limit)]
-                  for yi in y])
-
     fig = plt.figure()
     plt.scatter(X[:, 0], zip(*y)[1], edgecolor="red", facecolor="red", linewidth=1.0, alpha=0.7, label="Upper bound")
     plt.scatter(X[:, 0], zip(*y)[0], edgecolor="blue", facecolor="none", linewidth=1.0, alpha=0.7, label="Lower bound")
@@ -130,4 +124,4 @@ if __name__ == "__main__":
     datasets = {"simulated.sin": lambda x: np.sin(x),
                 "simulated.abs": lambda x: np.abs(x - 5.),
                 "simulated.linear": lambda x: x / 5}
-    generate_function_datasets(datasets, random_seed=42)
+    generate_function_datasets(datasets, random_seed=4)
