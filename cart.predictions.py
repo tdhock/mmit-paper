@@ -19,11 +19,12 @@ from time import time
 
 
 class IntervalDecisionTreeRegressor(DecisionTreeRegressor):
-    def __init__(self, margin=0., max_depth=10, min_samples_split=2):
+    def __init__(self, margin=0., max_depth=10, min_samples_split=2, random_state=None):
         self.margin = margin
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
-        super(IntervalDecisionTreeRegressor, self).__init__(max_depth=max_depth, min_samples_split=min_samples_split)
+        self.random_state = random_state
+        super(IntervalDecisionTreeRegressor, self).__init__(max_depth=max_depth, min_samples_split=min_samples_split, random_state=random_state)
 
     def fit(self, X, y):
         # Explode the intervals into real-valued labels
@@ -152,7 +153,8 @@ if __name__ == "__main__":
 
     datasets = list(find_datasets("./data"))
 
-    params = {"max_depth": [1, 2, 3, 4, 6, 9, 12, 16, 22, 30]}
+    params = {"max_depth": [1, 2, 3, 4, 6, 9, 12, 16, 22, 30], 
+              "random_state": [42]}
 
     # Prepare the results directory
     result_dir = "./predictions/cart"
