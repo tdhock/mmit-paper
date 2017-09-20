@@ -1,6 +1,7 @@
 """
 
 """
+import cPickle
 import json
 import numpy as np
 import pandas as pd
@@ -10,6 +11,8 @@ from mmit.metrics import mean_squared_error
 from mmit.model_selection import GridSearchCV
 from os import listdir, mkdir, system
 from os.path import abspath, basename, exists, join
+from sklearn.model_selection import KFold
+
 
 class Dataset(object):
     def __init__(self, path):
@@ -57,17 +60,19 @@ def save_predictions(estimator, method, dataset, predictions_path):
     open(join(predictions_path, method, dataset.name, "predictions.fulltrain.csv"), "w")\
         .write("pred.log.penalty\n" + "\n".join(str(p) for p in estimator.predict(dataset.X)))
     print estimator
-    json.dump(estimator.get_params(), open(join(predictions_path, method, dataset.name, "parameters.fulltrain.json"), "w"))
+    # cPickle.dump(estimator.get_params(), open(join(predictions_path, method, dataset.name, "parameters.fulltrain.json"), "w"))
 
 
 if __name__ == "__main__":
     predictions_path = "./predictions"
     n_cpu = 4
-    n_margin_values = 15
-    param_template = {"max_depth": [10000],
-                      "min_samples_split": [2]}
+    n_margin_values = 20
+    param_template = {"max_depth": [30],
+                      "min_samples_split": [2],
+                      "random_state": [42]}
 
     datasets = list(find_datasets("./data"))
+    # We are just interested in the simulated datasets for this experiment
     datasets = [d for d in datasets if "simulated." in d.name]
 
     for i, d in enumerate(datasets):
@@ -92,8 +97,10 @@ if __name__ == "__main__":
                 mkdir(join(predictions_path, method, d.name))
             except:
                 pass
-            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params, cv=10, n_jobs=n_cpu,
-                              scoring=mse_scorer, pruning=True).fit(d.X, d.y)
+            cv_protocol = KFold(n_splits=10, shuffle=True, random_state=42)
+            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params,
+                              cv=cv_protocol, n_jobs=n_cpu, scoring=mse_scorer,
+                              pruning=True).fit(d.X, d.y)
 
             for hps, metrics in cv.cv_results_:
                 print hps, metrics["cv"]
@@ -102,7 +109,6 @@ if __name__ == "__main__":
             print cv.best_estimator_
             print cv.best_params_
             print cv.best_score_
-            exit()
 
             save_predictions(cv.best_estimator_, method, d, predictions_path)
 
@@ -116,7 +122,12 @@ if __name__ == "__main__":
                 mkdir(join(predictions_path, method, d.name))
             except:
                 pass
-            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params, cv=10, n_jobs=n_cpu, scoring=mse_scorer,
+            cv_protocol = KFold(n_splits=10, shuffle=True, random_state=42)
+            cv = GridSearchCV(estimator=MaxMarginIntervalTree(), param_grid=params,
+                              cv=cv_protocol, n_jobs=n_cpu, scoring=mse_scorer,
                               pruning=True).fit(d.X, d.y)
             save_predictions(cv.best_estimator_, method, d, predictions_path)
-
+            print "BEST:"
+            print cv.best_estimator_
+            print cv.best_params_
+            print cv.best_score_
