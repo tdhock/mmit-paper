@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     cmap = sns.color_palette("hls", 8)
 
-    clip_to_min = 1e-7
+    clip_to_min = 1e-10
 
     # ------------------------------------------------------------------------------------------------------------------
     # Selected margin by dataset
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     for i, dataset in enumerate(dataset_names):
         for j, (method, fold_parameters) in enumerate(dataset_params_by_method[dataset].iteritems()):
             margins = np.array([f["best"]["margin"] for f in fold_parameters])
-            margins[margins == 0] = 1e-7
+            margins[margins == 0] = clip_to_min
             offset = 1e-4
             plt.scatter([i + j * offset] * 5, np.log10(margins), edgecolor=cmap[j], facecolor="none",
                         linewidth=1, s=20, alpha=0.7, label=method if not method_is_plotted[method] else None)
