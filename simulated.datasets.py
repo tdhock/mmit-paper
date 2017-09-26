@@ -6,30 +6,8 @@ import seaborn as sns; sns.set_style("white")
 from functools import partial
 
 
-def _generate_intervals_random_width(n_intervals, base_y=0., width_std=0.000001, y_shift_std=0.000001,
-                                     open_interval_proba=0.3, random_state=None):
-    if random_state is None:
-        random_state = np.random.RandomState()
-
-    lower = base_y - np.abs(random_state.normal(loc=0., scale=width_std, size=n_intervals))
-    upper = base_y + np.abs(random_state.normal(loc=0., scale=width_std, size=n_intervals))
-
-    shift = random_state.normal(loc=0., scale=y_shift_std, size=n_intervals)
-    lower += shift
-    upper += shift
-
-    # Randomly make some intervals open
-    for idx in np.where(random_state.binomial(1, open_interval_proba, n_intervals) == 1)[0]:
-        if random_state.binomial(1, 0.5) == 1:
-            lower[idx] = -np.infty
-        else:
-            upper[idx] = np.infty
-
-    return np.array(zip(lower, upper))
-
-
-def _generate_random_interval_francois(base_y=0., width_std=0.000001, shift_std=0.000001, open_interval_proba=0.3,
-                                       n_draws=100, random_state=None):
+def _generate_random_interval(base_y=0., width_std=0.000001, shift_std=0.000001,
+                              open_interval_proba=0.3, n_draws=100, random_state=None):
     # The standard deviation cannot be zero
     width_std = max(width_std, 0.001)
     shift_std = max(shift_std, 0.001)
@@ -68,12 +46,12 @@ def _generate_data(func, n_examples, n_features, interval_width_std, interval_sh
     x_signal = X[:, 0]
 
     base_y = np.array([func(xi) for xi in x_signal])
-    y = np.vstack((_generate_random_interval_francois(base_y=yi,
-                                                      width_std=interval_width_std,
-                                                      shift_std=interval_shift_std,
-                                                      open_interval_proba=open_interval_proba,
-                                                      n_draws=10,
-                                                      random_state=random_state)
+    y = np.vstack((_generate_random_interval(base_y=yi,
+                                             width_std=interval_width_std,
+                                             shift_std=interval_shift_std,
+                                             open_interval_proba=open_interval_proba,
+                                             n_draws=10,
+                                             random_state=random_state)
                    for yi in base_y))
 
     fig = plt.figure()
