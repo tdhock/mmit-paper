@@ -12,6 +12,7 @@ for(data.i in tseq){
   features.csv <- file.path(data.dir, "features.csv")
   features.dt <- fread(features.csv)
   data.moves.RData <- file.path(data.dir, "data.moves.RData")
+
   if(file.exists(data.moves.RData)){
     load(data.moves.RData)
   }else{
