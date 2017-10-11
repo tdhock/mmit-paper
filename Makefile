@@ -41,7 +41,7 @@ figure.simulated.functions.pdf: figure.simulated.functions.py
 	python $<
 downloaded.datasets: downloaded.datasets.py 
 	python $<
-figure.mmit.hps.pgf: figure.mmit.hps.py ./predictions/mmit*/*/parameters.json
+figure.mmit.hps: figure.mmit.hps.py ./predictions/mmit*/*/parameters.json
 	python $<
 cart.predictions: cart.predictions.py ./data/*/targets.csv
 	python $<
