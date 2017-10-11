@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         "simulated.abs": "$f(x) = |x|$",
                         "simulated.sin": r"$f(x) = \sin(x)$"}
     include_methods = ["mmit.linear.hinge.pruning", "IntervalRegressionCV"]
-    method_pretty_names = ["mmit", "l1-linear"]
+    method_pretty_names = ["MMIT", "L1-Linear"]
     method_pretty_names = dict(zip(include_methods, method_pretty_names))
 
     datasets = [Dataset("./data/{0!s}".format(d)) for d in include_datasets]
