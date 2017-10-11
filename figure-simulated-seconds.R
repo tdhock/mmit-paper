@@ -8,7 +8,7 @@ i.vec <- sample(1:nrow(tmat), max(n.vec), replace=TRUE)
 max.tmat <- tmat[i.vec, ]+runif(max(n.vec))
 arg.list <- list(times=10)
 for(n.sim in n.vec){
-  for(loss in c("hinge", "square", "no_ptr_move")){
+  for(loss in c("hinge", "square")){
     arg.list[[paste(n.sim, loss)]] <- substitute({
       result.df <- compute_optimal_costs(max.tmat[1:n.sim, ], 1, loss)
     }, list(loss=loss, n.sim=n.sim))
