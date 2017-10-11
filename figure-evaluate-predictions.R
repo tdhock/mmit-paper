@@ -28,13 +28,13 @@ algo.colors <- c(
   trafotree="#FC8D62",
   trafotree0.95="#8DA0CB",
   mmit.linear.hinge="#E78AC3",
-  mmit.squared.hinge="#A6D854", "#FFD92F", 
+  mmit.squared.hinge="#A6D854", "#FFD92F",
   IntervalRegressionCV="#E5C494",
   constant="#B3B3B3")#grey
 algo.colors <- c(
   trafotree="#A6CEE3", trafotree0.95="#1F78B4",
   mmit.linear.hinge="#B2DF8A", mmit.linear.hinge.pruning="#33A02C",
-  mmit.squared.hinge="#FB9A99", mmit.squared.hinge.pruning="#E31A1C", 
+  mmit.squared.hinge="#FB9A99", mmit.squared.hinge.pruning="#E31A1C",
   IntervalRegressionCV="#FDBF6F", "#FF7F00",
   constant="#CAB2D6", cart="#6A3D9A", "#FFFF99", "#B15928"
     )
@@ -139,10 +139,10 @@ mse.wide <- dcast(
   value.var=c("mean.squared.error"))
 mse.tall <- melt(
   mse.wide,
-  id.vars=c("set.name", "fold", "constant"),
+  id.vars=c("set.name", "fold"),
   value.name="mean.squared.error",
   variable.name="model.name")
-mse.tall[, diff.log.mse := log(constant)-log(mean.squared.error)]
+#mse.tall[, diff.log.mse := log(constant)-log(mean.squared.error)]
 show.data.map <- c(
   "simulated.abs"="simulated\nabs",
   "simulated.sin"="simulated\nsin",
@@ -170,19 +170,18 @@ show.model.vec <- c(
   "MMIT-L"="mmit.linear.hinge",
   "Interval-CART"="cart",
   TransfoTree="TTreeIntOnly",
-  ##TTree0.95="trafotree0.95",
   "L1-Linear"="IntervalRegressionCV",
   Constant="constantMSE")
 show.tall <- mse.tall[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
 show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
 
-ggplot()+
-  theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
-  facet_grid(. ~ set.name, scales="free")+
-  geom_point(aes(
-    diff.log.mse, model.fac),
-    data=show.tall)
+#ggplot()+
+#  theme_bw()+
+#  theme(panel.margin=grid::unit(0, "lines"))+
+#  facet_grid(. ~ set.name, scales="free")+
+#  geom_point(aes(
+#    diff.log.mse, model.fac),
+#    data=show.tall)
 
 mse.show.tall <- evaluate.predictions[model.name %in% show.model.vec & set.name %in% names(show.data.vec)]
 mse.show.tall[, model.fac := factor(model.name, rev(show.model.vec), rev(names(show.model.vec)))]
@@ -212,8 +211,9 @@ gg.folds <- ggplot()+
   geom_point(aes(
     ifelse(log10.mse > 10, Inf, log10.mse), model.fac),
     shape=1,
+    size=2,
     data=mse.show.tall)+
-  ylab("model")+
+  ylab(NULL)+  # y label was removed to save horiz space. It's obvious what that axis represents.
   geom_blank(aes(
     log10.mse, model.fac),
     data=data.table(
@@ -237,7 +237,7 @@ gg.folds <- ggplot()+
     ##,breaks=seq(-5, 1, by=0.5)
   )
 print(gg.folds)
-pdf("figure-evaluate-predictions-folds.pdf", 9, 2.5)
+pdf("figure-evaluate-predictions-folds.pdf", 7.9, 2.5)
 print(gg.folds)
 dev.off()
 
@@ -311,7 +311,7 @@ gg.mean <- ggplot()+
       model.fac=factor("CART", rev(names(show.model.vec)))))+
   xlab("log10(mean squared test error), mean +/- sd over 5 test folds")
 print(gg.mean)
-pdf("figure-evaluate-predictions-mean.pdf", 8, 1.8)
+pdf("figure-evaluate-predictions-mean.pdf", 8, 3)
 print(gg.mean)
 dev.off()
 
