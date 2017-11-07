@@ -1,9 +1,10 @@
 source("packages.R")
 
-size <- 20
+size <- 30
 n <- 1:size
 n.vec <- (-n)^n ## N-2 moves.
 n.vec <- (-10)^n ## N-2 moves as well.
+##n.vec <- (-1)^n
 out.mat <- cbind(
   ifelse(n.vec<0, -Inf, n.vec),
   ifelse(n.vec<0, n.vec, Inf))

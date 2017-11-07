@@ -2,17 +2,23 @@ source("packages.R")
 
 data(neuroblastomaProcessed)
 tmat <- neuroblastomaProcessed$target.mat
+fmat <- neuroblastomaProcessed$feature.mat
 n.vec <- as.integer(10^seq(3, 7, by=0.5))
 set.seed(1)
 i.vec <- sample(1:nrow(tmat), max(n.vec), replace=TRUE)
 max.tmat <- tmat[i.vec, ]+runif(max(n.vec))
+max.fmat <- fmat[i.vec, 1]+runif(max(n.vec))
+
 arg.list <- list(times=10)
 for(n.sim in n.vec){
   for(loss in c("hinge", "square")){
     arg.list[[paste(n.sim, loss)]] <- substitute({
-      result.df <- compute_optimal_costs(max.tmat[1:n.sim, ], 1, loss)
+      compute_optimal_costs(max.tmat[1:n.sim, ], 1, loss)
     }, list(loss=loss, n.sim=n.sim))
   }
+  arg.list[[paste(n.sim, "sort")]] <- substitute({
+    sort(max.fmat[1:n.sim])
+  }, list(n.sim=n.sim))
 }
 m.result <- do.call(microbenchmark, arg.list)
 
@@ -23,7 +29,8 @@ pattern <- paste0(
   "(?<loss>.*)")
 match.df <- namedCapture::str_match_named(
   paste(result.dt$expr), pattern, list(data=as.integer))
-match.result <- data.table(match.df, result.dt)
+(match.result <- data.table(match.df, result.dt))
+
 match.result[, hinge.loss := ifelse(loss=="hinge", "linear", loss)]
 match.result[, seconds := time/1e9]
 stats.dt <- match.result[, list(

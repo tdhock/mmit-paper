@@ -4,25 +4,29 @@ Max margin interval trees
 
 For the journal paper:
 
-- Simulated dataset add noise and remove examples, currently MMITs are
-  as good as linear on linear dataset
 - For what kinds of data does MMIT with the square loss learn a more
-  accurate model than Interval-CART? (Alex example)
-- Worst case for the squared loss (empirical + theoretical) :
+  accurate model than Interval-CART? Alex simulation figure: interval
+  censored and left censored data, INTERVAL-CART does worse for more
+  left censored data. What about for 0% interval censored data, plot
+  test accuracy as a function of % left censored -- hypothesis:
+  INTERVAL-CART does fine for 50% left/50% right censored data.
+- Worst case for the squared loss (empirical + theoretical):
   Guillem's example of quadratic worst case.
-- Uncensored outputs (survival datasets)
+- Uncensored outputs (survival datasets) -- mention how to implement
+  it, generalization of CART.
+- HEATMAP: Figure showing validation error as a function of regularization
+  parameters, tree depth and margin size (either as a 2d heatmap or
+  two line plots). Especially for the margin it would be nice to show
+  that has a regularizing effect.
+- Cite Robin Girard, better description of Trafotree.
+
+Probably can leave for future work:
+
 - Motivate nonlinear patterns using Toby's univariate experiment:
   train a linear model and a mmit for each feature individually and
   calculate the difference. The feature with the biggest difference
   should have a really non-linear pattern.
-- Figure showing validation error as a function of regularization
-  parameters, tree depth and margin size (either as a 2d heatmap or
-  two line plots). Especially for the margin it would be nice to show
-  that has a regularizing effect.
-
-Probably can leave for future work:
-
-- Forests
+- Forests.
 - Non-constant leaves. 
 
 ** 1 Sept 2017
