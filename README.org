@@ -28,7 +28,7 @@ Probably can leave for future work:
   calculate the difference. The feature with the biggest difference
   should have a really non-linear pattern.
 - Forests.
-- Non-constant leaves. 
+- Non-constant leaves: smooth after learning using interpolation between leaves. So we can use the same solver.
 
 ** 1 Sept 2017
 
