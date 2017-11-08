@@ -17,8 +17,9 @@ For the journal paper:
 - HEATMAP: Figure showing validation error as a function of regularization
   parameters, tree depth and margin size (either as a 2d heatmap or
   two line plots). Especially for the margin it would be nice to show
-  that has a regularizing effect.
-- Cite Robin Girard, better description of Trafotree.
+  that has a regularizing effect. (show for train and validation)
+- Cite Robin Girard, better description of Trafotree.à
+- Smoother models: make a simple implementation of forests and see how smooth it is.
 
 Probably can leave for future work:
 
