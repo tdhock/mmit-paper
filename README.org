@@ -11,7 +11,7 @@ For the journal paper:
   test accuracy as a function of % left censored -- hypothesis:
   INTERVAL-CART does fine for 50% left/50% right censored data.
 - Worst case for the squared loss (empirical + theoretical):
-  Guillem's example of quadratic worst case.
+  Guillem's example of quadratic worst case. (show that if we reshuffle it does not happen)
 - Uncensored outputs (survival datasets) -- mention how to implement
   it, generalization of CART.
 - HEATMAP: Figure showing validation error as a function of regularization
