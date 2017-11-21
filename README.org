@@ -45,7 +45,7 @@ Probably can leave for future work:
         |      |
         | CART | MMIT
 #+END_SRC
-In this case, Interval-CART would find it benefitial to split, but MMIT knows that this is a perfect leaf.
+In this case, Interval-CART would find it benefitial to split, but MMIT knows that this is a perfect leaf. Are Interval-CART trees generally more complex than MMIT trees? The interpretability of the models would make a good argument for favouring MMIT.
 
 - We know that MMIT finds the optimal solution for a variant of the squared loss that respects the structure of intervals. We can solve an equation to find the conditions under which the Inteval-CART solution is outside of the optimal region according to the MMIT solver.
 
