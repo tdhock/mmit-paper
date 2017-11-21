@@ -35,6 +35,8 @@ Probably can leave for future work:
 
 - Increasing the margin hyperparameter will encourage the partitioning of leaves. So if the margin is increased, the other regularization hyperparameters must compensate. We should see this in the heatmaps that were proposed above.
 
+- Can we make a figure where we show the relationship between tree depth and margin, assuming that tree depth and min samples split are unbounded.
+
 - Interval-CART is more likely to partition leaves, since it does not understand the structure of the interval outputs. Example:
 #+BEGIN_SRC
 *-------|------|----
@@ -48,6 +50,8 @@ In this case, Interval-CART would find it benefitial to split, but MMIT knows th
 - We know that MMIT finds the optimal solution for a variant of the squared loss that respects the structure of intervals. We can solve an equation to find the conditions under which the Inteval-CART solution is outside of the optimal region according to the MMIT solver.
 
 - We could then use this equation to scan the trees learned by Interval-CART and detect where it occurs for our data sets.
+
+- Assuming that all feature vectors are unique, fully grown MMIT and Interval-CART trees should yield the same (or very comparable) solutions. We can test this easily.
 
 
 ** 1 Sept 2017
