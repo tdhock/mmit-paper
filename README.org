@@ -30,6 +30,26 @@ Probably can leave for future work:
 - Forests.
 - Non-constant leaves: smooth after learning using interpolation between leaves. So we can use the same solver.
 
+
+** 21 Nov 2017 (Alex notes)
+
+- Increasing the margin hyperparameter will encourage the partitioning of leaves. So if the margin is increased, the other regularization hyperparameters must compensate. We should see this in the heatmaps that were proposed above.
+
+- Interval-CART is more likely to partition leaves, since it does not understand the structure of the interval outputs. Example:
+#+BEGIN_SRC
+*-------|------|----
+        |   *--|---o
+        |   *--|--o
+        |      |
+        | CART | MMIT
+#+END_SRC
+In this case, Interval-CART would find it benefitial to split, but MMIT knows that this is a perfect leaf.
+
+- We know that MMIT finds the optimal solution for a variant of the squared loss that respects the structure of intervals. We can solve an equation to find the conditions under which the Inteval-CART solution is outside of the optimal region according to the MMIT solver.
+
+- We could then use this equation to scan the trees learned by Interval-CART and detect where it occurs for our data sets.
+
+
 ** 1 Sept 2017
 
 Modified trafotreeCV function in [[file:trafotree.predictions.R]]: MSE
