@@ -49,6 +49,8 @@ In this case, Interval-CART would find it benefitial to split, but MMIT knows th
 
 - We know that MMIT finds the optimal solution for a variant of the squared loss that respects the structure of intervals. We can solve an equation to find the conditions under which the Inteval-CART solution is outside of the optimal region according to the MMIT solver.
 
+- In any given leaf, the minimum for the Interval-CART loss function is unique, whereas MMIT defines an optimal region. All we need to do is quantify when the ICART minimum is outside of this target region. I believe we can test this quickly using our dynamic programming algorithm.
+
 - We could then use this equation to scan the trees learned by Interval-CART and detect where it occurs for our data sets.
 
 - Assuming that all feature vectors are unique, fully grown MMIT and Interval-CART trees should yield the same (or very comparable) solutions. We can test this easily.
