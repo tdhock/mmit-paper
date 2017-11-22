@@ -30,8 +30,13 @@ Probably can leave for future work:
 - Forests.
 - Non-constant leaves: smooth after learning using interpolation between leaves. So we can use the same solver.
 
+** 22 Nov 2017 (Alex)
 
-** 21 Nov 2017 (Alex notes)
+- Demonstrated that Interval-CART and MMIT do not give the same solution, even with all interval-censored data. A consequence of this is that the Interval-CART models tend to have much more splits, even though thoses splits are not useful in practice.
+
+- Toby thinks I should add a fixed test set and cross-validation (for hp selection) to the figure that shows how interval-cart fails with right/left-censored data.
+
+** 21 Nov 2017 (Alex)
 
 - Increasing the margin hyperparameter will encourage the partitioning of leaves. So if the margin is increased, the other regularization hyperparameters must compensate. We should see this in the heatmaps that were proposed above.
 
