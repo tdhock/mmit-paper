@@ -20,6 +20,7 @@ For the journal paper:
   that has a regularizing effect. (show for train and validation)
 - Related works: Cite Robin Girard, better description of Trafotree.
 - Smoother models: make a simple implementation of forests and see how smooth it is. If we get interesting results, we will pursue this in another paper.
+- mention submission to CRAN
 
 Probably can leave for future work:
 
