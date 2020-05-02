@@ -1,7 +1,8 @@
-import matplotlib.pyplot as plt
+from   matplotlib import pyplot as plt
 import numpy as np
 import os
-import seaborn as sns; sns.set_style("white")
+import seaborn as sns; 
+sns.set_style("white")
 
 from functools import partial
 
@@ -39,6 +40,7 @@ def _generate_random_interval(base_y=0., width_std=0.000001, shift_std=0.000001,
 
 def _generate_data(func, n_examples, n_features, interval_width_std, interval_shift_std,
                    open_interval_proba, x_min=0, x_max=10, random_state=None):
+
     if random_state is None:
         random_state = np.random.RandomState()
 
@@ -55,8 +57,9 @@ def _generate_data(func, n_examples, n_features, interval_width_std, interval_sh
                    for yi in base_y))
 
     fig = plt.figure()
-    plt.scatter(X[:, 0], zip(*y)[1], edgecolor="red", facecolor="red", linewidth=1.0, alpha=0.7, label="Upper bound")
-    plt.scatter(X[:, 0], zip(*y)[0], edgecolor="blue", facecolor="none", linewidth=1.0, alpha=0.7, label="Lower bound")
+
+    plt.scatter(X[:, 0], list(zip(*y))[1], edgecolor="red", facecolor="red", linewidth=1.0, alpha=0.7, label="Upper bound")
+    plt.scatter(X[:, 0], list(zip(*y))[0], edgecolor="blue", facecolor="none", linewidth=1.0, alpha=0.7, label="Lower bound")
     plt.xlabel("Signal feature")
     plt.ylabel("Targets")
     plt.legend()
@@ -70,12 +73,16 @@ def generate_function_datasets(datasets, random_seed=42):
         folds = np.arange(X.shape[0]) % n_folds + 1
         random_state.shuffle(folds)
 
+        paren_dir = "data"
+        if not os.path.exists(paren_dir):
+            os.mkdir(paren_dir)
+
         ds_dir = "data/{0!s}".format(name)
         if not os.path.exists(ds_dir):
             os.mkdir(ds_dir)
 
-        header = ",".join("x{0:d}".format(i) for i in xrange(X.shape[1]))
-        features = "\n".join(",".join(str(X[i, j]) for j in xrange(X.shape[1])) for i in xrange(X.shape[0]))
+        header = ",".join("x{0:d}".format(i) for i in range(X.shape[1]))
+        features = "\n".join(",".join(str(X[i, j]) for j in range(X.shape[1])) for i in range(X.shape[0]))
         open(os.path.join(ds_dir, "features.csv"), "w").writelines("\n".join([header, features]))
         open(os.path.join(ds_dir, "targets.csv"), "w").writelines(["min.log.penalty, max.log.penalty\n"] +
                                                                   ["{0:.6f}, {1:.6f}\n".format(yi[0], yi[1]) for yi in
@@ -92,8 +99,8 @@ def generate_function_datasets(datasets, random_seed=42):
                        open_interval_proba=0.2,
                        random_state=random_state)
 
-    for name, func in datasets.iteritems():
-        print "Generating", name
+    for name, func in datasets.items():
+        print("Generating",name)
         X, y, plot = generate(func)
         save_dataset(X, y, plot, n_folds=5, name=name)
 
