@@ -1,7 +1,7 @@
-from   matplotlib import pyplot as plt
+from  matplotlib import pyplot as plt
 import numpy as np
 import os
-import seaborn as sns; 
+import seaborn as sns 
 sns.set_style("white")
 
 from functools import partial
@@ -73,9 +73,9 @@ def generate_function_datasets(datasets, random_seed=42):
         folds = np.arange(X.shape[0]) % n_folds + 1
         random_state.shuffle(folds)
 
-        paren_dir = "data"
-        if not os.path.exists(paren_dir):
-            os.mkdir(paren_dir)
+        parent_dir = "data"
+        if not os.path.exists(parent_dir):
+            os.mkdir(parent_dir)
 
         ds_dir = "data/{0!s}".format(name)
         if not os.path.exists(ds_dir):
@@ -110,3 +110,4 @@ if __name__ == "__main__":
                 "simulated.abs": lambda x: np.abs(x - 5.),
                 "simulated.linear": lambda x: x / 5}
     generate_function_datasets(datasets, random_seed=4)
+    
